@@ -194,12 +194,26 @@ class FacebookLeadAccount(models.Model):
             "title": _("Facebook Pages Imported"),
             "message": _("%(count)s Page(s) imported; %(subscribed)s webhook subscription(s) active; %(failed)s require attention.", count=imported, subscribed=subscribed, failed=subscription_failures),
             "type": "warning" if subscription_failures else "success",
-            "next": {"type": "ir.actions.act_window", "res_model": "facebook.lead.config", "view_mode": "list,form", "domain": [("account_id", "=", self.id)]},
+            "next": {
+                "type": "ir.actions.act_window",
+                "name": _("Facebook Pages"),
+                "res_model": "facebook.lead.config",
+                "views": [(False, "list"), (False, "form")],
+                "domain": [("account_id", "=", self.id)],
+                "context": {"default_account_id": self.id},
+            },
         }}
 
     def action_open_pages(self):
         self.ensure_one()
-        return {"type": "ir.actions.act_window", "name": _("Facebook Pages"), "res_model": "facebook.lead.config", "view_mode": "list,form", "domain": [("account_id", "=", self.id)], "context": {"default_account_id": self.id}}
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Facebook Pages"),
+            "res_model": "facebook.lead.config",
+            "views": [(False, "list"), (False, "form")],
+            "domain": [("account_id", "=", self.id)],
+            "context": {"default_account_id": self.id},
+        }
 
     def action_test_connection(self):
         self.ensure_one()

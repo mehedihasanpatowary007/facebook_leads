@@ -256,7 +256,14 @@ class FacebookLeadConfig(models.Model):
 
     def action_open_forms(self):
         self.ensure_one()
-        return {"type": "ir.actions.act_window", "name": _("Facebook Lead Forms"), "res_model": "facebook.lead.form", "view_mode": "list,form", "domain": [("config_id", "=", self.id)], "context": {"default_config_id": self.id}}
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Facebook Lead Forms"),
+            "res_model": "facebook.lead.form",
+            "views": [(False, "list"), (False, "form")],
+            "domain": [("config_id", "=", self.id)],
+            "context": {"default_config_id": self.id},
+        }
 
     def _sync_single_form(self, form, full=False):
         self.ensure_one()

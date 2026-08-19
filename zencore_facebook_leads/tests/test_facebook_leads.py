@@ -67,6 +67,15 @@ class TestFacebookLeads(TransactionCase):
                 "app_secret": "secret", "api_version": "25",
             })
 
+    def test_direct_window_actions_use_odoo_19_views_format(self):
+        account = self.env["facebook.lead.account"].create({
+            "name": "Action Test", "app_id": "987654", "app_secret": "secret",
+        })
+        account_action = account.action_open_pages()
+        page_action = self.config.action_open_forms()
+        self.assertEqual(account_action["views"], [(False, "list"), (False, "form")])
+        self.assertEqual(page_action["views"], [(False, "list"), (False, "form")])
+
     def test_unmapped_form_question_is_safe(self):
         form = self.env["facebook.lead.form"].create({
             "name": "Admissions", "config_id": self.config.id, "facebook_form_id": "20003",
