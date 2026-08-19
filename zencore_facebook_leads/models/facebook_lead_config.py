@@ -48,9 +48,8 @@ class FacebookLeadConfig(models.Model):
 
     @api.depends("page_id")
     def _compute_webhook_url(self):
-        base = self.env["ir.config_parameter"].sudo().get_param("web.base.url", "")
         for record in self:
-            record.webhook_url = urljoin(base.rstrip("/") + "/", "meta_lead_ads/webhook") if base else "/meta_lead_ads/webhook"
+            record.webhook_url = "https://wub-support-demo-34686622.dev.odoo.com/meta_lead_ads/webhook"
 
     def _graph_get(self, object_id, params=None):
         self.ensure_one()
