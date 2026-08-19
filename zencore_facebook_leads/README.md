@@ -11,3 +11,5 @@ Supportive Odoo 19 CRM connector for Meta/Facebook Lead Ads. The addon does not 
 5. The backup cron incrementally discovers notifications missed by the webhook.
 
 See [FACEBOOK_CONFIGURATION.md](FACEBOOK_CONFIGURATION.md), [ODOO_CONFIGURATION.md](ODOO_CONFIGURATION.md), and [USER_MANUAL.md](USER_MANUAL.md).
+
+When field mappings contain exact Facebook Form IDs, **Test Connection** verifies those forms directly through their leads endpoint. It does not require `pages_manage_ads` merely to list every Page form. Without any configured Form ID, the test falls back to the Page form-list endpoint, for which Meta may require additional ad-management permission.

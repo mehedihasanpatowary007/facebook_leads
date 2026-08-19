@@ -99,14 +99,17 @@ class FacebookLeadConfig(models.Model):
     def action_test_connection(self):
         self.ensure_one()
         payload = self._graph_get(self.page_id, {"fields": "id,name"})
-        page_forms = self._graph_get(self.page_id + "/leadgen_forms", {"fields": "id,name", "limit": 100})
-        accessible_forms = {str(form.get("id")): form.get("name") for form in page_forms.get("data", [])}
         configured_forms = set(self.mapping_ids.filtered("active").mapped("facebook_form_id"))
-        for form_id in configured_forms:
-            self._graph_get(form_id + "/leads", {"fields": "id", "limit": 1})
+        if configured_forms:
+            for form_id in configured_forms:
+                self._graph_get(form_id + "/leads", {"fields": "id", "limit": 1})
+            form_count = len(configured_forms)
+        else:
+            page_forms = self._graph_get(self.page_id + "/leadgen_forms", {"fields": "id,name", "limit": 100})
+            form_count = len(page_forms.get("data", []))
         return {"type": "ir.actions.client", "tag": "display_notification", "params": {
             "title": _("Connection and Lead Access Successful"),
-            "message": _("Page %(page)s; %(count)s accessible lead form(s).", page=payload.get("name") or payload.get("id"), count=len(accessible_forms)),
+            "message": _("Page %(page)s; %(count)s configured lead form(s) verified.", page=payload.get("name") or payload.get("id"), count=form_count),
             "type": "success",
         }}
 
