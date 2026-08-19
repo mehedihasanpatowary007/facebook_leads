@@ -19,4 +19,6 @@ OAuth requests use a short-lived, user-bound state token. Page/Form discovery su
 4. Failed requests use exponential backoff and can also be retried manually.
 5. The backup cron incrementally discovers notifications missed by the webhook.
 
+Each CRM Lead is linked to an Odoo Contact. Existing Contacts are reused by normalized email or phone, and PostgreSQL transaction locks prevent concurrent jobs from creating duplicate Contacts.
+
 See [FACEBOOK_CONFIGURATION.md](FACEBOOK_CONFIGURATION.md), [ODOO_CONFIGURATION.md](ODOO_CONFIGURATION.md), and [USER_MANUAL.md](USER_MANUAL.md).

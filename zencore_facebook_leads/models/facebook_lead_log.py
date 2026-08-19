@@ -1,9 +1,10 @@
 import logging
+import re
 from datetime import datetime, timedelta, timezone
 
 from psycopg2 import IntegrityError
 
-from odoo import _, api, fields, models
+from odoo import _, api, fields, models, tools
 from odoo.exceptions import UserError
 
 
@@ -103,6 +104,8 @@ class FacebookLeadLog(models.Model):
             values = self._prepare_lead_values(payload)
             try:
                 with self.env.cr.savepoint():
+                    partner = self._find_or_create_contact(values)
+                    values["partner_id"] = partner.id
                     lead = self.env["crm.lead"].sudo().with_company(self.config_id.company_id).create(values)
             except IntegrityError:
                 lead = self.env["crm.lead"].sudo().search([("facebook_lead_id", "=", self.facebook_lead_id)], limit=1)
@@ -125,6 +128,72 @@ class FacebookLeadLog(models.Model):
             self.config_id._record_failure(exc)
             _logger.exception("Facebook lead processing failed for %s", self.facebook_lead_id)
             return False
+
+    def _find_or_create_contact(self, lead_values):
+        """Find or create one Contact and safely reuse it across concurrent imports."""
+        self.ensure_one()
+        company = self.config_id.company_id
+        email = tools.email_normalize(lead_values.get("email_from"), strict=False) or False
+        phone = lead_values.get("phone") or False
+        phone_variants = self._phone_variants(phone, company.country_id)
+        identities = (["email:%s" % email] if email else []) + [
+            "phone:%s" % variant for variant in sorted(phone_variants)
+        ]
+        if not identities:
+            identities = ["lead:%s" % self.facebook_lead_id]
+        for identity in sorted(identities):
+            lock_key = "zencore-facebook-contact:%s:%s" % (company.id, identity)
+            self.env.cr.execute(
+                "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
+                [lock_key],
+            )
+
+        Partner = self.env["res.partner"].sudo().with_company(company).with_context(active_test=False)
+        partner = Partner
+        if email:
+            partner = Partner.search([
+                ("company_id", "in", [False, company.id]),
+                ("email_normalized", "=", email),
+            ], limit=1)
+        if not partner and phone_variants:
+            self.env.cr.execute(
+                """
+                    SELECT id
+                      FROM res_partner
+                     WHERE (company_id IS NULL OR company_id = %s)
+                       AND regexp_replace(COALESCE(phone, ''), '[^0-9]', '', 'g') = ANY(%s)
+                     ORDER BY active DESC, CASE WHEN company_id = %s THEN 0 ELSE 1 END, id
+                     LIMIT 1
+                """,
+                [company.id, list(phone_variants), company.id],
+            )
+            row = self.env.cr.fetchone()
+            partner = Partner.browse(row[0]) if row else Partner
+        if partner:
+            if not partner.active:
+                partner.active = True
+            return partner
+
+        contact_name = lead_values.get("contact_name") or email or phone
+        return Partner.create({
+            "name": contact_name or _("Facebook Lead %s") % self.facebook_lead_id,
+            "email": lead_values.get("email_from") or False,
+            "phone": phone,
+            "company_id": company.id,
+        })
+
+    @staticmethod
+    def _phone_variants(phone, country):
+        digits = re.sub(r"[^0-9]", "", str(phone or ""))
+        if not digits:
+            return set()
+        variants = {digits}
+        country_code = str(country.phone_code or "") if country else ""
+        if country_code and digits.startswith(country_code):
+            variants.add("0" + digits[len(country_code):])
+        elif country_code and digits.startswith("0"):
+            variants.add(country_code + digits[1:])
+        return variants
 
     def _prepare_lead_values(self, payload):
         answers = self._answers_to_dict(payload.get("field_data") or [])

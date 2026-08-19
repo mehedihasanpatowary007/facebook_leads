@@ -24,4 +24,6 @@ The webhook URL is generated from `web.base.url` and ends with `/meta_lead_ads/w
 
 The backup cron imports missed leads, the queue cron processes webhook notifications, and the cleanup cron removes logs according to the configured retention period. Facebook Lead ID uniqueness prevents duplicate CRM leads.
 
+During lead processing, Odoo links an existing Contact by normalized email or phone, or creates a new Contact when no match exists. Contact matching is company-aware and transaction-locked to protect concurrent imports.
+
 Page and Form imports follow Meta pagination, so accounts with more than 100 authorized records are supported. OAuth requests expire after 15 minutes and are bound to the Odoo administrator who initiated the connection.

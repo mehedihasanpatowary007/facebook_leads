@@ -43,7 +43,52 @@ class TestFacebookLeads(TransactionCase):
         self.assertTrue(lead)
         self.assertEqual(lead.contact_name, "Test Student")
         self.assertEqual(lead.phone, "+8801700000000")
+        self.assertTrue(lead.partner_id)
+        self.assertEqual(lead.partner_id.name, "Test Student")
         self.assertEqual(log.status, "success")
+
+    def test_distinct_submissions_reuse_contact_by_normalized_email(self):
+        payload = {
+            "form_id": "20002", "created_time": "2026-06-24T11:36:41+06:00",
+            "field_data": [
+                {"name": "full_name", "values": ["Contact Match"]},
+                {"name": "phone_number", "values": ["+8801711111111"]},
+                {"name": "email", "values": ["Student@Example.COM"]},
+            ],
+        }
+        first_log = self.env["facebook.lead.log"].create({
+            "config_id": self.config.id, "facebook_lead_id": "contact-1",
+            "facebook_form_id": "20002", "facebook_form_name": "Admissions",
+        })
+        second_log = self.env["facebook.lead.log"].create({
+            "config_id": self.config.id, "facebook_lead_id": "contact-2",
+            "facebook_form_id": "20002", "facebook_form_name": "Admissions",
+        })
+        first = first_log._process(lead_data={"id": "contact-1", **payload})
+        second = second_log._process(lead_data={"id": "contact-2", **payload})
+        self.assertNotEqual(first.id, second.id)
+        self.assertEqual(first.partner_id, second.partner_id)
+        self.assertEqual(first.partner_id.email_normalized, "student@example.com")
+
+    def test_distinct_submissions_reuse_contact_by_normalized_phone(self):
+        def process(lead_id, phone):
+            log = self.env["facebook.lead.log"].create({
+                "config_id": self.config.id, "facebook_lead_id": lead_id,
+                "facebook_form_id": "20002", "facebook_form_name": "Admissions",
+            })
+            return log._process(lead_data={
+                "id": lead_id, "form_id": "20002",
+                "created_time": "2026-06-24T11:36:41+06:00",
+                "field_data": [
+                    {"name": "full_name", "values": ["Phone Match"]},
+                    {"name": "phone_number", "values": [phone]},
+                ],
+            })
+
+        first = process("phone-contact-1", "+880 1711-111112")
+        second = process("phone-contact-2", "+8801711111112")
+        self.assertNotEqual(first.id, second.id)
+        self.assertEqual(first.partner_id, second.partner_id)
 
     def test_webhook_url_validation(self):
         with self.assertRaises(ValidationError):
