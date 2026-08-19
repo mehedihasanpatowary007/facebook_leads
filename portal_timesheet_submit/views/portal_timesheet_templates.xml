@@ -1,0 +1,590 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inject "New Entry" button -->
+    <template id="portal_my_timesheets_add_entry"
+              name="Portal Timesheets: New Entry Button"
+              inherit_id="hr_timesheet.portal_my_timesheets">
+
+        <xpath expr="//t[@t-call='portal.portal_searchbar']" position="after">
+            <div class="d-flex justify-content-end mb-3 mt-2">
+                <a href="/my/timesheets/create" class="btn btn-primary">
+                    <i class="fa fa-plus me-1"/>New Entry
+                </a>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- Timesheet Creation Form Template - Simple Odoo Style -->
+    <template id="timesheet_create_form" name="Timesheet Creation Form">
+        <t t-call="portal.portal_layout">
+            <t t-set="head">
+                <style>
+                    .search-dropdown-container {
+                        position: relative;
+                    }
+                    .search-suggestions {
+                        position: absolute;
+                        top: 100%;
+                        left: 0;
+                        right: 0;
+                        background: white;
+                        max-height: 300px;
+                        overflow-y: auto;
+                        z-index: 1060;
+                        border: 1px solid #dee2e6;
+                        border-radius: 0.375rem;
+                        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+                        display: none;
+                    }
+                    .search-suggestions .list-group-item {
+                        border: none;
+                        border-bottom: 1px solid #f8f9fa;
+                        padding: 10px 15px;
+                        cursor: pointer;
+                    }
+                    .search-suggestions .list-group-item:hover {
+                        background-color: #f8f9fa;
+                    }
+                    .required-field {
+                        border-color: #dc3545 !important;
+                    }
+                    .validation-error {
+                        color: #dc3545;
+                        font-size: 0.875rem;
+                        margin-top: 0.25rem;
+                        display: none;
+                    }
+                    .ts-success-msg {
+                        display: none;
+                        opacity: 0;
+                        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+                        border: 1px solid #b8dacc;
+                        border-left: 4px solid #28a745;
+                        color: #155724;
+                        border-radius: 0.5rem;
+                        padding: 0.875rem 1.25rem;
+                        margin-bottom: 1.25rem;
+                        font-size: 0.95rem;
+                        box-shadow: 0 2px 8px rgba(40,167,69,0.12);
+                        transition: opacity 0.5s ease-out;
+                    }
+                    .ts-success-msg i { margin-right: 0.4rem; }
+                </style>
+            </t>
+
+            <div class="container py-4">
+                <!-- Back button and title -->
+                <div class="d-flex align-items-center mb-4">
+                    <a href="/my/timesheets" class="text-decoration-none me-3">
+                        <i class="fa fa-arrow-left"/> Back
+                    </a>
+                    <h3 class="mb-0">Add a Line</h3>
+                </div>
+
+                <!-- Form Card -->
+                <div class="card">
+                    <div class="card-body p-4">
+                        
+                        <!-- Success Message -->
+                        <div class="ts-success-msg" id="ts_success_msg">
+                            <i class="fa fa-check-circle"/>
+                            <strong id="ts_success_text">Timesheet entry saved successfully!</strong>
+                        </div>
+
+                        <!-- Error Alert -->
+                        <div id="portal_ts_error" class="alert alert-danger d-none" role="alert">
+                            <i class="fa fa-exclamation-triangle me-2"/>
+                            <span id="portal_ts_error_msg"/>
+                        </div>
+
+                        <form id="timesheetForm" onsubmit="return false;">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                            <!-- Employee (Read-only) -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Employee</label>
+                                <input type="text" class="form-control bg-light" 
+                                       t-att-value="employee.name if employee else 'Not linked to employee'" 
+                                       readonly="readonly"/>
+                                <t t-if="not employee">
+                                    <small class="text-danger">
+                                        <i class="fa fa-exclamation-circle me-1"/>
+                                        No Employee record is linked to your account.
+                                    </small>
+                                </t>
+                            </div>
+
+                            <!-- Project -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">
+                                    Project <span class="text-danger">*</span>
+                                </label>
+                                <div id="project-search-container"></div>
+                                <div class="validation-error" id="project-error">Please select a project.</div>
+                            </div>
+
+                            <!-- Task -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Task</label>
+                                <div id="task-search-container"></div>
+                                <small class="text-muted">Select a project first to filter tasks</small>
+                            </div>
+
+                            <!-- Date -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">
+                                    Date <span class="text-danger">*</span>
+                                </label>
+                                <input type="date" id="portal_ts_date" class="form-control" 
+                                       name="entry_date" t-att-value="today"/>
+                                <div class="validation-error" id="date-error">Please select a date.</div>
+                            </div>
+
+                            <!-- Time Spent -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">
+                                    Time Spent <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <input type="text" id="portal_ts_time" 
+                                           class="form-control" name="unit_amount"
+                                           placeholder="HH:MM or 1.5"/>
+                                    <span class="input-group-text">
+                                        <i class="fa fa-clock-o"/>
+                                    </span>
+                                </div>
+                                <small class="text-muted">
+                                    e.g. 01:30 or 1.5 (decimal hours)
+                                </small>
+                                <div class="validation-error" id="time-error">Please enter a valid time.</div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Description</label>
+                                <input type="text" id="portal_ts_desc" 
+                                    class="form-control" name="name"
+                                    autocomplete="off"
+                                    placeholder="Describe your activity..."/>
+                            </div>
+
+                            <!-- Buttons -->
+                            <div class="d-flex gap-2">
+                                <button type="submit" id="portal_ts_save" class="btn btn-primary">
+                                    <span id="portal_ts_spinner" 
+                                          class="spinner-border spinner-border-sm me-1 d-none"
+                                          role="status" aria-hidden="true"/>
+                                    <i id="portal_ts_save_icon" class="fa fa-save me-1"/>
+                                    Save
+                                </button>
+                                <a href="/my/timesheets" class="btn btn-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+            <![CDATA[
+                // SearchDropdown Component
+                class SearchDropdown {
+                    constructor(config) {
+                        this.config = config;
+                        this.state = {
+                            searchTerm: "",
+                            filteredItems: [],
+                            isLoading: false,
+                            selectedItem: null
+                        };
+                        this.init();
+                    }
+
+                    init() {
+                        this.createHTML();
+                        this.bindEvents();
+                    }
+
+                    createHTML() {
+                        const container = this.config.container;
+                        const placeholder = this.config.placeholder || 'Search...';
+                        const name = this.config.name;
+                        
+                        container.innerHTML = `
+                            <div class="search-dropdown-container">
+                                <div class="input-group">
+                                    <input type="text" 
+                                        class="form-control search-dropdown-input" 
+                                        placeholder="${placeholder}" 
+                                        autocomplete="off"/>
+                                    <input type="hidden" name="${name}" class="selected-value"/>
+                                    <button class="btn btn-outline-secondary clear-search-btn" type="button" style="display: none;">
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="search-suggestions" style="display: none;">
+                                    <div class="list-group"></div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        this.elements = {
+                            container: container.querySelector('.search-dropdown-container'),
+                            input: container.querySelector('.search-dropdown-input'),
+                            hiddenInput: container.querySelector('.selected-value'),
+                            suggestions: container.querySelector('.search-suggestions'),
+                            clearBtn: container.querySelector('.clear-search-btn'),
+                            list: container.querySelector('.list-group')
+                        };
+                    }
+
+                    bindEvents() {
+                        this.elements.input.addEventListener('input', (ev) => this.onSearchChange(ev));
+                        this.elements.input.addEventListener('focus', () => this.onSearchFocus());
+                        this.elements.input.addEventListener('blur', () => {
+                            setTimeout(() => this.hideSuggestions(), 200);
+                        });
+                        this.elements.clearBtn.addEventListener('click', () => this.clear());
+                        
+                        document.addEventListener('click', (e) => {
+                            if (!this.elements.container.contains(e.target)) {
+                                this.hideSuggestions();
+                            }
+                        });
+                    }
+
+                    async onSearchChange(ev) {
+                        const searchTerm = ev.target.value;
+                        this.state.searchTerm = searchTerm;
+                        this.elements.clearBtn.style.display = searchTerm ? 'block' : 'none';
+                        await this.loadSuggestions(searchTerm);
+                        this.showSuggestions();
+                    }
+
+                    async onSearchFocus() {
+                        if (!this.state.searchTerm) {
+                            await this.loadSuggestions('');
+                            this.showSuggestions();
+                        }
+                    }
+
+                    async loadSuggestions(searchTerm) {
+                        if (this.state.isLoading) return;
+                        
+                        this.state.isLoading = true;
+                        this.showLoadingState();
+                        
+                        try {
+                            const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+                            const params = { search_term: searchTerm };
+                            if (this.config.projectId) {
+                                params.project_id = this.config.projectId;
+                            }
+
+                            const response = await fetch(this.config.searchUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': csrfToken
+                                },
+                                body: JSON.stringify({
+                                    jsonrpc: "2.0",
+                                    method: "call",
+                                    params: params
+                                })
+                            });
+                            
+                            const data = await response.json();
+                            this.state.filteredItems = data.result?.items || data.items || [];
+                            this.renderSuggestions();
+                        } catch (error) {
+                            console.error('Error loading suggestions:', error);
+                            this.state.filteredItems = [];
+                            this.renderSuggestions();
+                        } finally {
+                            this.state.isLoading = false;
+                        }
+                    }
+
+                    showLoadingState() {
+                        this.elements.list.innerHTML = '<div class="list-group-item text-center text-muted"><i class="fa fa-spinner fa-spin me-2"></i>Loading...</div>';
+                    }
+
+                    renderSuggestions() {
+                        this.elements.list.innerHTML = '';
+                        if (this.state.filteredItems.length === 0) {
+                            this.elements.list.innerHTML = '<div class="list-group-item text-muted text-center">No results found</div>';
+                            return;
+                        }
+
+                        this.state.filteredItems.forEach((item) => {
+                            const itemElement = document.createElement('button');
+                            itemElement.type = 'button';
+                            itemElement.className = 'list-group-item list-group-item-action';
+                            itemElement.innerHTML = `<div class="fw-bold">${this.escapeHtml(item.name)}</div>`;
+                            itemElement.addEventListener('click', () => this.onItemSelect(item));
+                            this.elements.list.appendChild(itemElement);
+                        });
+                    }
+
+                    onItemSelect(item) {
+                        this.state.selectedItem = item;
+                        this.state.searchTerm = item.name;
+                        this.elements.input.value = item.name;
+                        this.elements.hiddenInput.value = item.id;
+                        this.elements.clearBtn.style.display = 'block';
+                        this.hideSuggestions();
+                        if (this.config.onSelect) this.config.onSelect(item);
+                    }
+
+                    clear() {
+                        this.state.searchTerm = "";
+                        this.state.selectedItem = null;
+                        this.state.filteredItems = [];
+                        this.elements.input.value = "";
+                        this.elements.hiddenInput.value = "";
+                        this.elements.clearBtn.style.display = 'none';
+                        this.hideSuggestions();
+                        if (this.config.onClear) this.config.onClear();
+                    }
+
+                    showSuggestions() {
+                        this.elements.suggestions.style.display = 'block';
+                    }
+
+                    hideSuggestions() {
+                        this.elements.suggestions.style.display = 'none';
+                    }
+
+                    escapeHtml(text) {
+                        const div = document.createElement('div');
+                        div.textContent = text;
+                        return div.innerHTML;
+                    }
+
+                    getValue() {
+                        return this.state.selectedItem;
+                    }
+
+                    setDisabled(disabled) {
+                        this.elements.input.disabled = disabled;
+                        this.elements.clearBtn.disabled = disabled;
+                    }
+                }
+
+                // Global variables
+                let projectSearch;
+                let taskSearch;
+
+                function parseTime(raw) {
+                    var s = (raw || '').trim();
+                    if (!s) return NaN;
+                    if (s.indexOf(':') !== -1) {
+                        var p = s.split(':');
+                        if (p.length !== 2) return NaN;
+                        var h = parseInt(p[0], 10), m = parseInt(p[1], 10);
+                        if (isNaN(h) || isNaN(m) || m < 0 || m > 59) return NaN;
+                        return h + m / 60;
+                    }
+                    return parseFloat(s);
+                }
+
+                function showError(msg) {
+                    var errBox = document.getElementById('portal_ts_error');
+                    var errMsg = document.getElementById('portal_ts_error_msg');
+                    errMsg.textContent = msg;
+                    errBox.classList.remove('d-none');
+                }
+
+                function hideError() {
+                    document.getElementById('portal_ts_error').classList.add('d-none');
+                }
+
+                function markInvalid(fieldId) {
+                    var field = document.getElementById(fieldId);
+                    if (field) field.classList.add('required-field');
+                    var errorEl = document.getElementById(fieldId + '-error');
+                    if (errorEl) errorEl.style.display = 'block';
+                }
+
+                function clearFieldError(fieldId) {
+                    var field = document.getElementById(fieldId);
+                    if (field) field.classList.remove('required-field');
+                    var errorEl = document.getElementById(fieldId + '-error');
+                    if (errorEl) errorEl.style.display = 'none';
+                }
+
+                function setBusy(on) {
+                    var btn = document.getElementById('portal_ts_save');
+                    var spinner = document.getElementById('portal_ts_spinner');
+                    var icon = document.getElementById('portal_ts_save_icon');
+                    btn.disabled = on;
+                    spinner.classList.toggle('d-none', !on);
+                    icon.classList.toggle('d-none', on);
+                }
+
+                function autoHideSuccessMessage() {
+                    const successMessage = document.getElementById('ts_success_msg');
+                    if (successMessage) {
+                        successMessage.style.display = 'block';
+                        void successMessage.offsetHeight;
+                        successMessage.style.opacity = '1';
+                        setTimeout(function() {
+                            successMessage.style.opacity = '0';
+                            successMessage.style.transition = 'opacity 0.5s ease-out';
+                            setTimeout(function() {
+                                successMessage.style.display = 'none';
+                            }, 500);
+                        }, 5000);
+                    }
+                }
+
+                function showSuccess(msg) {
+                    var el = document.getElementById('ts_success_text');
+                    if (el) el.textContent = msg || 'Timesheet entry saved successfully!';
+                    autoHideSuccessMessage();
+                }
+
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Project Search
+                    const projectContainer = document.getElementById('project-search-container');
+                    if (projectContainer) {
+                        projectSearch = new SearchDropdown({
+                            container: projectContainer,
+                            placeholder: 'Search for project...',
+                            name: 'project_id',
+                            searchUrl: '/my/timesheets/search/projects',
+                            onSelect: function(project) {
+                                clearFieldError('portal_ts_project');
+                                if (taskSearch) {
+                                    taskSearch.config.projectId = project.id;
+                                    taskSearch.clear();
+                                    taskSearch.setDisabled(false);
+                                    taskSearch.elements.input.placeholder = 'Search for task...';
+                                }
+                            },
+                            onClear: function() {
+                                if (taskSearch) {
+                                    taskSearch.config.projectId = null;
+                                    taskSearch.clear();
+                                    taskSearch.setDisabled(true);
+                                    taskSearch.elements.input.placeholder = 'Select a project first...';
+                                }
+                            }
+                        });
+                    }
+
+                    // Task Search
+                    const taskContainer = document.getElementById('task-search-container');
+                    if (taskContainer) {
+                        taskSearch = new SearchDropdown({
+                            container: taskContainer,
+                            placeholder: 'Select a project first...',
+                            name: 'task_id',
+                            searchUrl: '/my/timesheets/search/tasks',
+                            onSelect: function() {
+                                clearFieldError('portal_ts_task');
+                            }
+                        });
+                        taskSearch.setDisabled(true);
+                    }
+
+                    // Disable save if no employee
+                    if (document.querySelector('small.text-danger')) {
+                        document.getElementById('portal_ts_save').disabled = true;
+                    }
+
+                    // Validation
+                    document.getElementById('portal_ts_date').addEventListener('blur', function() {
+                        if (this.value) clearFieldError('portal_ts_date');
+                    });
+
+                    document.getElementById('portal_ts_time').addEventListener('blur', function() {
+                        var hours = parseTime(this.value);
+                        if (!isNaN(hours) && hours > 0) clearFieldError('portal_ts_time');
+                    });
+
+                    // Submit
+                    document.getElementById('timesheetForm').addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        hideError();
+
+                        var valid = true;
+
+                        if (!projectSearch || !projectSearch.getValue()) {
+                            markInvalid('portal_ts_project');
+                            valid = false;
+                        }
+
+                        var inpDate = document.getElementById('portal_ts_date');
+                        if (!inpDate.value) {
+                            markInvalid('portal_ts_date');
+                            valid = false;
+                        }
+
+                        var inpTime = document.getElementById('portal_ts_time');
+                        var hours = parseTime(inpTime.value);
+                        if (isNaN(hours) || hours <= 0) {
+                            markInvalid('portal_ts_time');
+                            valid = false;
+                        } else if (hours > 24) {
+                            showError('Time spent cannot exceed 24 hours per entry.');
+                            markInvalid('portal_ts_time');
+                            valid = false;
+                        }
+
+                        if (!valid) {
+                            showError('Please fill in all required fields.');
+                            return;
+                        }
+
+                        setBusy(true);
+
+                        var taskValue = taskSearch ? taskSearch.getValue() : null;
+                        var csrfToken = document.querySelector('input[name="csrf_token"]').value;
+                        
+                        fetch('/my/timesheets/submit', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify({
+                                project_id: projectSearch.getValue().id,
+                                task_id: taskValue ? taskValue.id : null,
+                                name: document.getElementById('portal_ts_desc').value.trim() || '/',
+                                entry_date: inpDate.value,
+                                unit_amount: hours
+                            })
+                        })
+                        .then(r => r.json())
+                        .then(res => {
+                            setBusy(false);
+                            if (!res.success) {
+                                showError(res.error || 'An error occurred.');
+                                return;
+                            }
+                            // Show success banner and reset the form for next entry
+                            var taskLabel = res.task_name ? ' on task "' + res.task_name + '"' : '';
+                            showSuccess('Saved! ' + res.unit_amount + 'h logged to "' + res.project_name + '"' + taskLabel + '.');
+                            projectSearch.clear();
+                            if (taskSearch) {
+                                taskSearch.config.projectId = null;
+                                taskSearch.clear();
+                                taskSearch.setDisabled(true);
+                                taskSearch.elements.input.placeholder = 'Select a project first...';
+                            }
+                            document.getElementById('portal_ts_desc').value = '';
+                            document.getElementById('portal_ts_time').value = '';
+                        })
+                        .catch(err => {
+                            setBusy(false);
+                            showError('Network error: ' + err.message);
+                        });
+                    });
+                });
+            ]]>
+            </script>
+        </t>
+    </template>
+</odoo>

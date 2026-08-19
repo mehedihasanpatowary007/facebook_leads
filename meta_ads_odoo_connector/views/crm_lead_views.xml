@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_crm_lead_form_meta_ads" model="ir.ui.view">
+        <field name="name">crm.lead.form.meta.ads</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Meta Ads" name="meta_ads_page">
+                    <group>
+                        <group string="Lead Source">
+                            <field name="x_meta_leadgen_id"/>
+                            <field name="x_meta_form_id"/>
+                            <field name="x_meta_page_id"/>
+                            <field name="x_meta_created_time"/>
+                        </group>
+                        <group string="Ad Attribution">
+                            <field name="x_meta_campaign_id"/>
+                            <field name="x_meta_adset_id"/>
+                            <field name="x_meta_ad_id"/>
+                            <field name="meta_campaign_ref_id" readonly="1"/>
+                            <field name="meta_adset_ref_id" readonly="1"/>
+                            <field name="meta_ad_ref_id" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Raw Payload" groups="meta_ads_odoo_connector.group_meta_ads_technical">
+                        <field name="x_meta_raw_payload" nolabel="1"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

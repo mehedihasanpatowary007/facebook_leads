@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_meta_ad_set_list" model="ir.ui.view">
+        <field name="name">meta.ad.set.list</field>
+        <field name="model">meta.ad.set</field>
+        <field name="arch" type="xml">
+            <list string="Meta Ad Sets">
+                <field name="name"/>
+                <field name="campaign_id"/>
+                <field name="ad_account_id"/>
+                <field name="status"/>
+                <field name="effective_status"/>
+                <field name="optimization_goal"/>
+                <field name="daily_budget"/>
+                <field name="start_time"/>
+                <field name="end_time"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_meta_ad_set_form" model="ir.ui.view">
+        <field name="name">meta.ad.set.form</field>
+        <field name="model">meta.ad.set</field>
+        <field name="arch" type="xml">
+            <form string="Meta Ad Set">
+                <sheet>
+                    <group>
+                        <group string="Ad Set">
+                            <field name="name"/>
+                            <field name="company_id"/>
+                            <field name="config_id"/>
+                            <field name="ad_account_id"/>
+                            <field name="campaign_id"/>
+                            <field name="meta_adset_id"/>
+                            <field name="meta_campaign_id"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Delivery">
+                            <field name="status"/>
+                            <field name="effective_status"/>
+                            <field name="optimization_goal"/>
+                            <field name="billing_event"/>
+                            <field name="bid_strategy"/>
+                            <field name="daily_budget"/>
+                            <field name="lifetime_budget"/>
+                        </group>
+                    </group>
+                    <group string="Schedule">
+                        <field name="start_time"/>
+                        <field name="end_time"/>
+                        <field name="last_sync_at" readonly="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Ads">
+                            <field name="ad_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="status"/>
+                                    <field name="effective_status"/>
+                                    <field name="creative_id"/>
+                                    <field name="last_sync_at"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Targeting">
+                            <field name="targeting_json" nolabel="1"/>
+                        </page>
+                        <page string="Promoted Object">
+                            <field name="promoted_object_json" nolabel="1"/>
+                        </page>
+                        <page string="Attribution">
+                            <field name="attribution_spec_json" nolabel="1"/>
+                        </page>
+                        <page string="Raw Payload" groups="meta_ads_odoo_connector.group_meta_ads_technical">
+                            <field name="raw_payload" nolabel="1" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_meta_ad_set_search" model="ir.ui.view">
+        <field name="name">meta.ad.set.search</field>
+        <field name="model">meta.ad.set</field>
+        <field name="arch" type="xml">
+            <search string="Search Ad Sets">
+                <field name="name"/>
+                <field name="meta_adset_id"/>
+                <field name="campaign_id"/>
+                <field name="ad_account_id"/>
+                <field name="status"/>
+                <filter string="Active" name="active" domain="[('active','=',True)]"/>
+                <filter string="Campaign" name="group_campaign" context="{'group_by': 'campaign_id'}"/>
+                <filter string="Ad Account" name="group_account" context="{'group_by': 'ad_account_id'}"/>
+                <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
+                <filter string="Optimization Goal" name="group_optimization" context="{'group_by': 'optimization_goal'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_meta_ad_set" model="ir.actions.act_window">
+        <field name="name">Ad Sets</field>
+        <field name="res_model">meta.ad.set</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_meta_ad_set_search"/>
+    </record>
+</odoo>

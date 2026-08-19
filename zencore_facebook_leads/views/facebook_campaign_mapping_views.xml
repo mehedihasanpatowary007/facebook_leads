@@ -1,0 +1,4 @@
+<odoo>
+    <record id="view_facebook_campaign_mapping_list" model="ir.ui.view"><field name="name">facebook.campaign.mapping.list</field><field name="model">facebook.campaign.mapping</field><field name="arch" type="xml"><list editable="bottom"><field name="config_id"/><field name="facebook_campaign_id"/><field name="facebook_campaign_name"/><field name="campaign_id"/><field name="active"/></list></field></record>
+    <record id="action_facebook_campaign_mapping" model="ir.actions.act_window"><field name="name">Facebook Campaign Mapping</field><field name="res_model">facebook.campaign.mapping</field><field name="view_mode">list,form</field></record>
+</odoo>

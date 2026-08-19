@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_zencore_helpdesk_ticket_user,zencore: helpdesk.ticket (helpdesk user),helpdesk.model_helpdesk_ticket,helpdesk.group_helpdesk_user,1,1,1,0
+access_zencore_helpdesk_ticket_manager,zencore: helpdesk.ticket (helpdesk manager),helpdesk.model_helpdesk_ticket,helpdesk.group_helpdesk_manager,1,1,1,1
+access_zencore_mail_mail_user,zencore: mail.mail (helpdesk user),mail.model_mail_mail,helpdesk.group_helpdesk_user,1,0,1,0
+access_zencore_mail_message_user,zencore: mail.message read (helpdesk user),mail.model_mail_message,helpdesk.group_helpdesk_user,1,0,0,0
+access_zencore_mail_template_user,zencore: mail.template read (helpdesk user),mail.model_mail_template,helpdesk.group_helpdesk_user,1,0,0,0

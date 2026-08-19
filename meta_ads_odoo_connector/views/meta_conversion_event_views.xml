@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_meta_conversion_event_list" model="ir.ui.view">
+        <field name="name">meta.conversion.event.list</field>
+        <field name="model">meta.conversion.event</field>
+        <field name="arch" type="xml">
+            <list string="Conversion Events">
+                <field name="create_date"/>
+                <field name="name"/>
+                <field name="event_name"/>
+                <field name="event_id"/>
+                <field name="status"/>
+                <field name="partner_id"/>
+                <field name="sale_order_id"/>
+                <field name="invoice_id"/>
+                <field name="value"/>
+                <field name="sent_at"/>
+                <field name="retry_count"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_meta_conversion_event_form" model="ir.ui.view">
+        <field name="name">meta.conversion.event.form</field>
+        <field name="model">meta.conversion.event</field>
+        <field name="arch" type="xml">
+            <form string="Conversion Event">
+                <header>
+                    <button name="action_prepare_user_data" type="object" string="Prepare Payload" class="btn-secondary" invisible="status == 'sent'"/>
+                    <button name="action_send" type="object" string="Send to Meta" class="btn-primary" invisible="status == 'sent' or status == 'cancelled'"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="status in ('sent', 'cancelled')"/>
+                    <field name="status" widget="statusbar" statusbar_visible="draft,ready,sent,failed,cancelled"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Event">
+                            <field name="name"/>
+                            <field name="company_id"/>
+                            <field name="config_id"/>
+                            <field name="pixel_id"/>
+                            <field name="event_name"/>
+                            <field name="event_id" readonly="1"/>
+                            <field name="event_time"/>
+                            <field name="action_source"/>
+                        </group>
+                        <group string="Related Odoo Record">
+                            <field name="partner_id"/>
+                            <field name="lead_id"/>
+                            <field name="sale_order_id"/>
+                            <field name="invoice_id"/>
+                            <field name="currency_id"/>
+                            <field name="value"/>
+                        </group>
+                    </group>
+                    <group string="Status">
+                        <field name="retry_count" readonly="1"/>
+                        <field name="sent_at" readonly="1"/>
+                        <field name="last_error" readonly="1"/>
+                    </group>
+                    <notebook>
+                        <page string="User Data">
+                            <field name="user_data_json" nolabel="1"/>
+                        </page>
+                        <page string="Custom Data">
+                            <field name="custom_data_json" nolabel="1"/>
+                        </page>
+                        <page string="Response">
+                            <field name="response_json" nolabel="1" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_meta_conversion_event_search" model="ir.ui.view">
+        <field name="name">meta.conversion.event.search</field>
+        <field name="model">meta.conversion.event</field>
+        <field name="arch" type="xml">
+            <search string="Search Conversion Events">
+                <field name="name"/>
+                <field name="event_name"/>
+                <field name="event_id"/>
+                <field name="partner_id"/>
+                <field name="sale_order_id"/>
+                <field name="invoice_id"/>
+                <filter string="Ready" name="ready" domain="[('status','=','ready')]"/>
+                <filter string="Failed" name="failed" domain="[('status','=','failed')]"/>
+                <filter string="Sent" name="sent" domain="[('status','=','sent')]"/>
+                <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
+                <filter string="Event" name="group_event" context="{'group_by': 'event_name'}"/>
+                <filter string="Company" name="group_company" context="{'group_by': 'company_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_meta_conversion_event" model="ir.actions.act_window">
+        <field name="name">Conversion Events</field>
+        <field name="res_model">meta.conversion.event</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_meta_conversion_event_search"/>
+    </record>
+</odoo>

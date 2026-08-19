@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_crm_lead_form_inherit_meta_lead_ads" model="ir.ui.view">
+        <field name="name">crm.lead.form.inherit.meta.lead.ads</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Meta Lead Ads" invisible="not meta_leadgen_id">
+                    <group>
+                        <group string="Lead Source">
+                            <field name="meta_leadgen_id" readonly="1"/>
+                            <field name="meta_form_id" readonly="1"/>
+                            <field name="meta_page_id" readonly="1"/>
+                            <field name="meta_created_time" readonly="1"/>
+                            <field name="meta_platform" readonly="1"/>
+                            <field name="meta_is_organic" readonly="1"/>
+                        </group>
+                        <group string="Ad Attribution">
+                            <field name="meta_campaign_id" readonly="1"/>
+                            <field name="meta_campaign_name" readonly="1"/>
+                            <field name="meta_adset_id" readonly="1"/>
+                            <field name="meta_adset_name" readonly="1"/>
+                            <field name="meta_ad_id" readonly="1"/>
+                            <field name="meta_ad_name" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Technical">
+                        <field name="meta_queue_id" readonly="1"/>
+                    </group>
+                    <field name="meta_raw_payload" readonly="1" groups="meta_lead_ads_webhook.group_meta_lead_technical"/>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_crm_leads_from_meta" model="ir.actions.act_window">
+        <field name="name">CRM Leads from Meta</field>
+        <field name="res_model">crm.lead</field>
+        <field name="view_mode">list,kanban,form,calendar,pivot,graph,activity</field>
+        <field name="domain">[('meta_leadgen_id', '!=', False)]</field>
+        <field name="context">{'default_type': 'lead'}</field>
+    </record>
+</odoo>

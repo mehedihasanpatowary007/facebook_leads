@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_users_form_inherit_wub_ipcalling" model="ir.ui.view">
+        <field name="name">res.users.form.inherit.wub.ipcalling</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//h5[@name='h5_phone']" position="after">
+                <h5 name="h5_ip_calling_mail" class="d-flex align-items-baseline mb-0">
+                    <i class="fa fa-fw fa-headphones me-1 text-primary" title="IP Calling Mail"/>
+                    <field name="ip_calling_mail" placeholder="IP Calling Mail" class="w-75"/>
+                </h5>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_users_simple_form_inherit_wub_ipcalling" model="ir.ui.view">
+        <field name="name">res.users.simple.form.inherit.wub.ipcalling</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_simple_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[field[@name='phone']]" position="after">
+                <div class="d-flex align-items-baseline w-100">
+                    <i class="fa fa-fw me-1 fa-headphones text-primary" title="IP Calling Mail"/>
+                    <field name="ip_calling_mail" class="w-100" placeholder="IP Calling Mail"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_users_preferences_form_inherit_wub_ipcalling" model="ir.ui.view">
+        <field name="name">res.users.preferences.form.inherit.wub.ipcalling</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form_simple_modif"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='preferences_page']//group[@name='other_preferences']" position="inside">
+                <field name="ip_calling_mail" placeholder="green@ihelpbd.com"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

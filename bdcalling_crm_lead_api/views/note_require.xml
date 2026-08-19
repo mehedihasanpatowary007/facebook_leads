@@ -1,0 +1,14 @@
+
+<!-- note or some log must required for go to next step -->
+<odoo>
+    <record id="crm_lead_lost_form_required" model="ir.ui.view">
+        <field name="name">crm.lead.lost.form.required</field>
+        <field name="model">crm.lead.lost</field>
+        <field name="inherit_id" ref="crm.crm_lead_lost_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='lost_feedback']" position="attributes">
+                <attribute name="required">lost_reason_id == False or lost_reason_id == []</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

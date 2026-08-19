@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_meta_ads_config_list" model="ir.ui.view">
+        <field name="name">meta.ads.config.list</field>
+        <field name="model">meta.ads.config</field>
+        <field name="arch" type="xml">
+            <list string="Meta Connections">
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="api_version"/>
+                <field name="business_id"/>
+                <field name="auto_sync"/>
+                <field name="last_test_at"/>
+                <field name="last_sync_at"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_meta_ads_config_form" model="ir.ui.view">
+        <field name="name">meta.ads.config.form</field>
+        <field name="model">meta.ads.config</field>
+        <field name="arch" type="xml">
+            <form string="Meta Connection">
+                <header>
+                    <button name="button_test_connection" type="object" string="Test Connection" class="btn-primary"/>
+                    <button name="action_sync_all" type="object" string="Sync All" class="btn-secondary"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Connection">
+                            <field name="name"/>
+                            <field name="company_id"/>
+                            <field name="api_version"/>
+                            <field name="business_id"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Credentials" groups="meta_ads_odoo_connector.group_meta_ads_administrator">
+                            <field name="app_id"/>
+                            <field name="app_secret" password="True"/>
+                            <field name="access_token" password="True"/>
+                            <field name="token_expires_at"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Automation">
+                            <field name="auto_sync"/>
+                            <field name="sync_insights_days"/>
+                            <field name="last_test_at" readonly="1"/>
+                            <field name="last_sync_at" readonly="1"/>
+                        </group>
+                        <group string="Last Error">
+                            <field name="last_error" nolabel="1" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Ad Accounts">
+                            <field name="ad_account_ids" readonly="1">
+                                <list>
+                                    <field name="display_account_id"/>
+                                    <field name="name"/>
+                                    <field name="currency"/>
+                                    <field name="account_status"/>
+                                    <field name="last_sync_at"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_meta_ads_config_search" model="ir.ui.view">
+        <field name="name">meta.ads.config.search</field>
+        <field name="model">meta.ads.config</field>
+        <field name="arch" type="xml">
+            <search string="Search Meta Connections">
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="business_id"/>
+                <filter string="Active" name="active" domain="[('active','=',True)]"/>
+                <filter string="Auto Sync" name="auto_sync" domain="[('auto_sync','=',True)]"/>
+                <filter string="Company" name="group_company" context="{'group_by': 'company_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_meta_ads_config" model="ir.actions.act_window">
+        <field name="name">Meta Connections</field>
+        <field name="res_model">meta.ads.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_meta_ads_config_search"/>
+    </record>
+</odoo>

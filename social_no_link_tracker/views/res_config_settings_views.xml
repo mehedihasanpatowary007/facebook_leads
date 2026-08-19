@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_social_no_tracker" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.social.no.link.tracker</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//app[@name='social']" position="inside">
+                <block title="Link Tracking">
+                    <setting
+                        string="Disable Auto Link Tracking in Social Posts"
+                        help="Enable to keep your original URLs in Social Marketing post messages unchanged. When active, Odoo will NOT replace them with Odoo short tracked links (/r/XXXXX). Disable to restore the default Odoo link-shortening behaviour.">
+                        <field name="social_disable_link_tracker"/>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>

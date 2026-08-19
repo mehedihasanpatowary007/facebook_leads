@@ -1,0 +1,4 @@
+<odoo>
+<!--  No view override needed — action_assign_leads is already the correct
+         button name in Odoo 19 and our method overrides it directly.  -->
+</odoo>

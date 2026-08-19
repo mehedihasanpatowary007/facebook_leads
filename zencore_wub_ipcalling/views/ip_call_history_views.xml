@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_wub_ip_call_history_list" model="ir.ui.view">
+        <field name="name">zencore.wub.ip.call.history.list</field>
+        <field name="model">zencore.wub.ip.call.history</field>
+        <field name="arch" type="xml">
+            <list string="WUB IP Call History" create="0" edit="0" delete="0">
+                <field name="called_at"/>
+                <field name="name"/>
+                <field name="operation_type" widget="badge"/>
+                <field name="is_active_call"/>
+                <field name="lead_id"/>
+                <field name="partner_id"/>
+                <field name="user_id"/>
+                <field name="agent_email"/>
+                <field name="phone_number"/>
+                <field name="state" decoration-success="state == 'success'" decoration-danger="state == 'error'" widget="badge"/>
+                <field name="request_format"/>
+                <field name="http_status"/>
+                <field name="response_code"/>
+                <field name="result_reason"/>
+                <field name="dialer_status"/>
+                <field name="call_status"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_wub_ip_call_history_form" model="ir.ui.view">
+        <field name="name">zencore.wub.ip.call.history.form</field>
+        <field name="model">zencore.wub.ip.call.history</field>
+        <field name="arch" type="xml">
+            <form string="WUB IP Call History" create="0" edit="0" delete="0">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,success,error"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="CRM Information">
+                            <field name="lead_id"/>
+                            <field name="partner_id"/>
+                            <field name="user_id"/>
+                            <field name="company_id"/>
+                            <field name="called_at"/>
+                            <field name="operation_type"/>
+                            <field name="is_active_call"/>
+                        </group>
+                        <group string="API Request">
+                            <field name="endpoint_url"/>
+                            <field name="request_method"/>
+                            <field name="request_format"/>
+                            <field name="agent_email"/>
+                            <field name="phone_number"/>
+                            <field name="calling_history_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Response Summary">
+                            <group>
+                                <group>
+                                    <field name="http_status"/>
+                                    <field name="api_status"/>
+                                    <field name="response_code"/>
+                                    <field name="code_reason"/>
+                                </group>
+                                <group>
+                                    <field name="result_reason"/>
+                                    <field name="number"/>
+                                    <field name="agent"/>
+                                    <field name="dial_extension"/>
+                                </group>
+                            </group>
+                            <group string="Error" invisible="not error_message">
+                                <field name="error_message" nolabel="1"/>
+                            </group>
+                        </page>
+                        <page string="Request Payload">
+                            <group string="Request Headers">
+                                <field name="request_headers" nolabel="1" widget="text"/>
+                            </group>
+                            <group string="Request Body">
+                                <field name="request_payload" nolabel="1" widget="text"/>
+                            </group>
+                        </page>
+                        <page string="Response Payload">
+                            <field name="response_payload" nolabel="1" widget="text"/>
+                        </page>
+                        <page string="Dialer Callback">
+                            <group>
+                                <group>
+                                    <field name="callback_received_at"/>
+                                    <field name="call_id"/>
+                                    <field name="call_time"/>
+                                    <field name="dialer_status"/>
+                                    <field name="call_status"/>
+                                </group>
+                                <group>
+                                    <field name="agent_id"/>
+                                    <field name="agent_full_name"/>
+                                    <field name="campaign"/>
+                                    <field name="length_in_sec"/>
+                                    <field name="queue_seconds"/>
+                                    <field name="term_reason"/>
+                                    <field name="recording_url" widget="url"/>
+                                </group>
+                            </group>
+                            <field name="callback_payload" nolabel="1" widget="text"/>
+                        </page>
+                        <page string="Debug">
+                            <field name="debug_message" nolabel="1" widget="text"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_wub_ip_call_history_search" model="ir.ui.view">
+        <field name="name">zencore.wub.ip.call.history.search</field>
+        <field name="model">zencore.wub.ip.call.history</field>
+        <field name="arch" type="xml">
+            <search string="WUB IP Call History">
+                <field name="name"/>
+                <field name="lead_id"/>
+                <field name="partner_id"/>
+                <field name="user_id"/>
+                <field name="agent_email"/>
+                <field name="phone_number"/>
+                <field name="operation_type"/>
+                <filter string="Success" name="filter_success" domain="[('state', '=', 'success')]"/>
+                <filter string="Error" name="filter_error" domain="[('state', '=', 'error')]"/>
+                <filter string="Click to Call" name="filter_click_to_call" domain="[('operation_type', '=', 'click_to_call')]"/>
+                <filter string="Active Calls" name="filter_active" domain="[('is_active_call', '=', True)]"/>
+                <separator/>
+                <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                <filter string="Operation" name="group_operation" context="{'group_by': 'operation_type'}"/>
+                <filter string="User" name="group_user" context="{'group_by': 'user_id'}"/>
+                <filter string="Lead" name="group_lead" context="{'group_by': 'lead_id'}"/>
+                <filter string="Called Date" name="group_called_at" context="{'group_by': 'called_at:day'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_wub_ip_call_history" model="ir.actions.act_window">
+        <field name="name">WUB IP Call History</field>
+        <field name="res_model">zencore.wub.ip.call.history</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_wub_ip_call_history_search"/>
+        <field name="context">{'search_default_group_called_at': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No IP call history found.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_wub_ip_calling_root"
+              name="IP Calling"
+              parent="crm.crm_menu_root"
+              sequence="90"
+              groups="sales_team.group_sale_salesman"/>
+
+    <menuitem id="menu_wub_ip_call_history"
+              name="Call History"
+              parent="menu_wub_ip_calling_root"
+              action="action_wub_ip_call_history"
+              sequence="10"
+              groups="sales_team.group_sale_salesman"/>
+</odoo>

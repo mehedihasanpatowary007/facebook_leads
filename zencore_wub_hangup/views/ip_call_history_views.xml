@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_wub_ip_call_history_form_inherit_hangup" model="ir.ui.view">
+        <field name="name">zencore.wub.ip.call.history.form.inherit.hangup</field>
+        <field name="model">zencore.wub.ip.call.history</field>
+        <field name="inherit_id" ref="zencore_wub_ipcalling.view_wub_ip_call_history_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form/header/field[@name='state']" position="before">
+                <button name="action_release_stale_call"
+                        string="Release Stale Call"
+                        type="object"
+                        class="btn-warning"
+                        icon="fa-unlock"
+                        invisible="operation_type != 'click_to_call' or not is_active_call"
+                        confirm="Use this only if the phone call has already ended. This clears the Odoo active-call lock but does not send a hangup request to the external calling service. Continue?"/>
+            </xpath>
+            <xpath expr="//field[@name='is_active_call']" position="after">
+                <field name="related_call_id" invisible="operation_type != 'hangup'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_wub_ip_call_history_search_inherit_hangup" model="ir.ui.view">
+        <field name="name">zencore.wub.ip.call.history.search.inherit.hangup</field>
+        <field name="model">zencore.wub.ip.call.history</field>
+        <field name="inherit_id" ref="zencore_wub_ipcalling.view_wub_ip_call_history_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='filter_click_to_call']" position="after">
+                <filter string="Call Hangup" name="filter_hangup" domain="[('operation_type', '=', 'hangup')]"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

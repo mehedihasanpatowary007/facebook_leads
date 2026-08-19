@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ================================================================
+         1. Add "Assign Portal Users" field to project.project form view
+            (inherits project.edit_project — the real Odoo 19 view id)
+         ================================================================ -->
+    <record id="view_project_form_inherit_portal_users" model="ir.ui.view">
+        <field name="name">project.project.form.inherit.portal.users</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <!-- Place after Project Manager (user_id) field -->
+            <xpath expr="//field[@name='user_id']" position="after">
+                <field name="portal_user_ids"
+                       widget="many2many_tags"
+                       placeholder="Assign Portal Users..."
+                       domain="[('share', '=', True), ('active', '=', True)]"
+                       options="{'color_field': 'color', 'no_create_edit': True}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         2. Fix task Assignees (user_ids) domain.
+
+         Odoo default: domain=[('share','=',False),('active','=',True)]
+         which only shows internal users.
+
+         We change it to show both internal (share=False) AND portal
+         (share=True) users, while still excluding public users
+         (which have no active res.users entry at all).
+
+         The xpath targets the FIRST occurrence of user_ids in the form,
+         which is the one in the main sheet group.
+         ================================================================ -->
+    <record id="view_task_form2_inherit_user_domain" model="ir.ui.view">
+        <field name="name">project.task.form2.inherit.user.domain</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <!--
+                Target the user_ids field that has class="o_task_user_field"
+                (the main assignees field in the form sheet).
+                Set domain to show active internal AND portal users.
+            -->
+            <xpath expr="//field[@name='user_ids'][@class='o_task_user_field']"
+                   position="attributes">
+                <attribute name="domain">[('active', '=', True), ('share', 'in', [False, True])]</attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

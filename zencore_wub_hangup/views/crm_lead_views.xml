@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="crm_lead_view_form_inherit_wub_hangup" model="ir.ui.view">
+        <field name="name">crm.lead.form.inherit.wub.hangup</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="zencore_wub_ipcalling.crm_lead_view_form_inherit_wub_ipcalling"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form/header/button[@name='action_ip_call']" position="before">
+                <field name="ip_call_active" invisible="1"/>
+            </xpath>
+            <xpath expr="//form/header/button[@name='action_ip_call']" position="attributes">
+                <attribute name="invisible">ip_call_active</attribute>
+            </xpath>
+            <xpath expr="//form/header/button[@name='action_ip_call']" position="after">
+                <button name="action_ip_call_hangup"
+                        string="Hang Up"
+                        type="object"
+                        class="btn-danger"
+                        icon="fa-stop-circle"
+                        invisible="not ip_call_active"
+                        confirm="Are you sure you want to hang up the current agent call?"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_users_form_ip_calling" model="ir.ui.view">
+        <field name="name">res.users.form.ip.calling</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='email']" position="after">
+                <field name="ip_calling_email" placeholder="Ip calling mail"/>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

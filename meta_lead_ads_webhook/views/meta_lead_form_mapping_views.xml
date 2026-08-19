@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_meta_lead_form_mapping_list" model="ir.ui.view">
+        <field name="name">meta.lead.form.mapping.list</field>
+        <field name="model">meta.lead.form.mapping</field>
+        <field name="arch" type="xml">
+            <list string="Lead Form Mappings">
+                <field name="name"/>
+                <field name="connection_id"/>
+                <field name="meta_form_id"/>
+                <field name="meta_form_name"/>
+                <field name="crm_team_id"/>
+                <field name="user_id"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_meta_lead_form_mapping_form" model="ir.ui.view">
+        <field name="name">meta.lead.form.mapping.form</field>
+        <field name="model">meta.lead.form.mapping</field>
+        <field name="arch" type="xml">
+            <form string="Lead Form Mapping">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" invisible="active"/>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="active"/>
+                            <field name="connection_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="meta_form_id"/>
+                            <field name="meta_form_name"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="CRM Assignment">
+                            <group>
+                                <group>
+                                    <field name="crm_team_id"/>
+                                    <field name="user_id"/>
+                                    <field name="tag_ids" widget="many2many_tags"/>
+                                </group>
+                                <group>
+                                    <field name="source_id"/>
+                                    <field name="medium_id"/>
+                                    <field name="campaign_id"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Custom Field Mapping">
+                            <field name="field_map_line_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="meta_field_name"/>
+                                    <field name="odoo_field_name"/>
+                                    <button name="action_validate_field" type="object" string="Validate" class="btn-link"/>
+                                </list>
+                            </field>
+                            <p class="text-muted">
+                                Common fields such as full_name, email, phone_number, city, company_name and job_title are mapped automatically.
+                                Use this table for custom Meta form questions and custom crm.lead fields.
+                            </p>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_meta_lead_form_mapping_search" model="ir.ui.view">
+        <field name="name">meta.lead.form.mapping.search</field>
+        <field name="model">meta.lead.form.mapping</field>
+        <field name="arch" type="xml">
+            <search string="Search Lead Form Mappings">
+                <field name="name"/>
+                <field name="meta_form_id"/>
+                <field name="meta_form_name"/>
+                <field name="connection_id"/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <filter string="Connection" name="group_connection" context="{'group_by': 'connection_id'}"/>
+                <filter string="Salesperson" name="group_user" context="{'group_by': 'user_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_meta_lead_form_mapping" model="ir.actions.act_window">
+        <field name="name">Lead Form Mappings</field>
+        <field name="res_model">meta.lead.form.mapping</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Map Meta lead forms to Odoo CRM assignment rules.</p>
+        </field>
+    </record>
+</odoo>

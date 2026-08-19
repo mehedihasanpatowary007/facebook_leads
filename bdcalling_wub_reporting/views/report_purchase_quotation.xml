@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_purchase_quotation_custom">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="bdcalling_wub_reporting.external_layout_minimal">
+                    <div class="page" style="font-size: 12px; line-height: 1.4;">
+                        
+                        <!-- Header Section -->
+                        <div style="margin-bottom: 8px; font-size: 12px;">
+                            <div style="float: left; width: 50%;">
+                                <strong>Ref:</strong> <span t-field="o.name"/><br/>
+                                <strong>To:</strong><br/>
+                                <span t-field="o.partner_id.name"/><br/>
+                                <t t-if="o.partner_id.street">
+                                    <span t-field="o.partner_id.street"/><br/>
+                                </t>
+                                <t t-if="o.partner_id.street2">
+                                    <span t-field="o.partner_id.street2"/><br/>
+                                </t>
+                                <t t-if="o.partner_id.city or o.partner_id.zip">
+                                    <span t-field="o.partner_id.city"/>
+                                    <t t-if="o.partner_id.city and o.partner_id.zip">, </t>
+                                    <span t-field="o.partner_id.zip"/>
+                                </t>
+                            </div>
+                            <div style="float: right; width: 50%; text-align: right;">
+                                <strong>Date:</strong> 
+                                <t t-if="o.work_order_date">
+                                    <span t-esc="o.work_order_date.strftime('%B %d, %Y')"/>
+                                </t>
+                                <t t-else="">
+                                    <span t-esc="o.date_order.strftime('%B %d, %Y')"/>
+                                </t>
+                            </div>
+                            <div style="clear: both;"></div>
+                        </div>
+
+                        <!-- Subject -->
+                        <div style="margin-bottom: 8px; font-size: 12px;">
+                            <strong>Subject:</strong> <span t-field="o.subject"/>
+                        </div>
+
+                        <!-- Dear Sir Salutation -->
+                        <div style="margin-bottom: 8px; font-size: 12px;">
+                            <p style="margin: 0;">Dear Sir,</p>
+                            <p style="margin: 0 0 8px 0;">We have received your price quotation. We are pleased to inform you that the authority of World University of Bangladesh (WUB) has accepted your quotation for Printing items at items that need to be printed are as follows:</p>
+                        </div>
+
+                        <!-- Products Table with Calculation Section -->
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 12px;">
+                            <thead>
+                                <tr>
+                                    <th style="border: 1px solid black; padding: 4px; text-align: center; width: 5%; font-size: 12px;">Sl. No.</th>
+                                    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 40%; font-size: 12px;">Description</th>
+                                    <th style="border: 1px solid black; padding: 4px; text-align: center; width: 15%; font-size: 12px;">Quantity</th>
+                                    <th style="border: 1px solid black; padding: 4px; text-align: right; width: 20%; font-size: 12px;">Unit price (Tk.)</th>
+                                    <th style="border: 1px solid black; padding: 4px; text-align: right; width: 20%; font-size: 12px;">Total Price (Tk.)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-set="line_num" t-value="1"/>
+                                <tr t-foreach="o.order_line" t-as="line">
+                                    <td style="border: 1px solid black; padding: 4px; text-align: center; font-size: 12px;">
+                                        <t t-esc="line_num"/>
+                                    </td>
+                                    <td style="border: 1px solid black; padding: 4px; text-align: left; font-size: 12px;">
+                                        <span t-field="line.name"/>
+                                    </td>
+                                    <td style="border: 1px solid black; padding: 4px; text-align: center; font-size: 12px;">
+                                        <span t-field="line.product_qty"/>
+                                        <span t-field="line.product_uom_id.name"/>
+                                    </td>
+                                    <td style="border: 1px solid black; padding: 4px; text-align: right; font-size: 12px;">
+                                        <t t-esc="'{:,.2f}'.format(line.price_unit)"/>
+                                    </td>
+                                    <td style="border: 1px solid black; padding: 4px; text-align: right; font-size: 12px;">
+                                        <t t-esc="'{:,.2f}'.format(line.price_subtotal)"/>
+                                    </td>
+                                    <t t-set="line_num" t-value="line_num + 1"/>
+                                </tr>
+                                <!-- Calculation Rows -->
+                                <tr>
+                                    <td colspan="3" style="border: none;"></td>
+                                    <td style="border: 1px solid black; padding: 4px; text-align: left; font-size: 12px;"><strong>Total amount</strong></td>
+                                    <td style="border: 1px solid black; padding: 4px; text-align: right; font-size: 12px;"><strong><t t-esc="'{:,.2f}'.format(o.total_amount)"/></strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" style="border: none;"></td>
+                                    <td style="border: 1px solid black; padding: 4px; text-align: left; font-size: 12px;"><strong>Add: VAT <t t-esc="int(o.vat_percentage_add)"/>%</strong></td>
+                                    <td style="border: 1px solid black; padding: 4px; text-align: right; font-size: 12px;"><t t-esc="'{:,.2f}'.format(o.vat_add_amount)"/></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" style="border: none;"></td>
+                                    <td style="border: 1px solid black; padding: 4px; text-align: left; font-size: 12px;"><strong>Sub Total</strong></td>
+                                    <td style="border: 1px solid black; padding: 4px; text-align: right; font-size: 12px;"><strong><t t-esc="'{:,.2f}'.format(o.sub_total_amount)"/></strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" style="border: none;"></td>
+                                    <td style="border: 1px solid black; padding: 4px; text-align: left; font-size: 12px;"><strong>Less: VAT <t t-esc="int(o.vat_percentage_less)"/>%</strong></td>
+                                    <td style="border: 1px solid black; padding: 4px; text-align: right; font-size: 12px;"><t t-esc="'{:,.2f}'.format(o.vat_less_amount)"/></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" style="border: none;"></td>
+                                    <td style="border: 1px solid black; padding: 4px; text-align: left; font-size: 12px;"><strong>Less: AIT (<t t-esc="int(o.ait_percentage)"/>%)</strong></td>
+                                    <td style="border: 1px solid black; padding: 4px; text-align: right; font-size: 12px;"><t t-esc="'{:,.2f}'.format(o.ait_amount)"/></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" style="border: none;"></td>
+                                    <td style="border: 1px solid black; border-top: 2px solid black; padding: 4px; text-align: left; font-size: 12px;"><strong>Net Payable Amount</strong></td>
+                                    <td style="border: 1px solid black; border-top: 2px solid black; padding: 4px; text-align: right; font-size: 12px;"><strong><t t-esc="'{:,.2f}'.format(o.net_payable_amount)"/></strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- In Words - Table Format -->
+                        <table style="width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px;">
+                            <tr>
+                                <td style="border: 1px solid black; padding: 8px; width: 15%; font-weight: bold; background-color: #f0f0f0;">
+                                    In Words:
+                                </td>
+                                <td style="border: 1px solid black; padding: 8px; width: 85%;">
+                                    <span t-field="o.net_payable_amount_words"/>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Note Section - Dynamic HTML Content with Table Support -->
+                        <div style="margin: 10px 0 20px 0; font-size: 12px;">
+                            <p style="margin: 0 0 6px 0;"><strong>Terms and Conditions:</strong></p>
+                            <t t-if="o.term_note">
+                                <div style="padding: 0; border: none; min-height: 50px; font-size: 12px; line-height: 1.6;">
+                                    <style>
+                                        .page * {
+                                            font-size: 12px !important;
+                                        }
+                                        .page table {
+                                            border-collapse: collapse;
+                                            width: 100%;
+                                            margin: 10px 0;
+                                        }
+                                        .page table td, .page table th {
+                                            border: 1px solid #000;
+                                            padding: 8px;
+                                            text-align: left;
+                                            font-size: 12px !important;
+                                        }
+                                        .page table th {
+                                            font-weight: bold;
+                                        }
+                                        .page p, .page div, .page span, .page strong, .page td, .page th {
+                                            font-size: 12px !important;
+                                        }
+                                    </style>
+                                    <t t-raw="o.term_note"/>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div style="padding: 0; border: none; min-height: 50px; font-size: 12px;">
+                                    <span style="color: #999; font-style: italic;">No additional notes</span>
+                                </div>
+                            </t>
+                        </div>
+
+                       
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

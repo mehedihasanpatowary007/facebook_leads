@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_meta_ads_root" name="Meta Ads" sequence="35" groups="meta_ads_odoo_connector.group_meta_ads_user"/>
+
+    <menuitem id="menu_meta_ads_reporting" name="Reporting" parent="menu_meta_ads_root" sequence="10" groups="meta_ads_odoo_connector.group_meta_ads_user"/>
+    <menuitem id="menu_meta_ads_insights" name="Ads Insights" parent="menu_meta_ads_reporting" action="action_meta_ads_insight" sequence="10" groups="meta_ads_odoo_connector.group_meta_ads_user"/>
+
+    <menuitem id="menu_meta_ads_campaign_management" name="Campaign Management" parent="menu_meta_ads_root" sequence="20" groups="meta_ads_odoo_connector.group_meta_ads_user"/>
+    <menuitem id="menu_meta_ad_accounts" name="Ad Accounts" parent="menu_meta_ads_campaign_management" action="action_meta_ad_account" sequence="10" groups="meta_ads_odoo_connector.group_meta_ads_user"/>
+    <menuitem id="menu_meta_campaigns" name="Campaigns" parent="menu_meta_ads_campaign_management" action="action_meta_campaign" sequence="20" groups="meta_ads_odoo_connector.group_meta_ads_user"/>
+    <menuitem id="menu_meta_ad_sets" name="Ad Sets" parent="menu_meta_ads_campaign_management" action="action_meta_ad_set" sequence="30" groups="meta_ads_odoo_connector.group_meta_ads_user"/>
+    <menuitem id="menu_meta_ads" name="Ads" parent="menu_meta_ads_campaign_management" action="action_meta_ad" sequence="40" groups="meta_ads_odoo_connector.group_meta_ads_user"/>
+    <menuitem id="menu_meta_creatives" name="Creatives" parent="menu_meta_ads_campaign_management" action="action_meta_ad_creative" sequence="50" groups="meta_ads_odoo_connector.group_meta_ads_user"/>
+
+    <menuitem id="menu_meta_ads_leads" name="Lead Ads" parent="menu_meta_ads_root" sequence="30" groups="meta_ads_odoo_connector.group_meta_ads_manager"/>
+    <menuitem id="menu_meta_lead_forms" name="Lead Forms" parent="menu_meta_ads_leads" action="action_meta_lead_form" sequence="10" groups="meta_ads_odoo_connector.group_meta_ads_manager"/>
+
+    <menuitem id="menu_meta_ads_conversions" name="Conversions API" parent="menu_meta_ads_root" sequence="40" groups="meta_ads_odoo_connector.group_meta_ads_manager"/>
+    <menuitem id="menu_meta_conversion_events" name="Conversion Events" parent="menu_meta_ads_conversions" action="action_meta_conversion_event" sequence="10" groups="meta_ads_odoo_connector.group_meta_ads_manager"/>
+
+    <menuitem id="menu_meta_ads_configuration" name="Configuration" parent="menu_meta_ads_root" sequence="90" groups="meta_ads_odoo_connector.group_meta_ads_administrator"/>
+    <menuitem id="menu_meta_ads_connections" name="Meta Connections" parent="menu_meta_ads_configuration" action="action_meta_ads_config" sequence="10" groups="meta_ads_odoo_connector.group_meta_ads_administrator"/>
+    <menuitem id="menu_meta_ads_api_logs" name="API Logs" parent="menu_meta_ads_configuration" action="action_meta_api_log" sequence="90" groups="meta_ads_odoo_connector.group_meta_ads_technical"/>
+</odoo>

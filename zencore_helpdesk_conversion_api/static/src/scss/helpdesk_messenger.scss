@@ -1,0 +1,71 @@
+// // =============================================================================
+// // Zencore Helpdesk Messenger - Layout Overrides
+// // =============================================================================
+
+// .o-zencore-helpdesk-thread.o-mail-Thread {
+//     background-color: #171818;
+//     border-radius: 8px;
+//     padding: 0.5rem 0;
+// }
+
+// .o-zencore-helpdesk-thread .o-mail-Message {
+//     margin-top: 0.25rem;
+//     margin-bottom: 0;
+// }
+
+// .o-zencore-helpdesk-thread .o-mail-Message .o-mail-Message-core {
+//     align-items: flex-start;
+// }
+
+// .o-zencore-helpdesk-thread .o-mail-Message .o-discuss-text-body {
+//     width: 75%;
+//     max-width: 680px;
+//     overflow-wrap: anywhere;
+// }
+
+// .o-zencore-helpdesk-thread .o-mail-Message.o-selfAuthored {
+//     flex-direction: row-reverse;
+// }
+
+// .o-zencore-helpdesk-thread .o-mail-Message.o-selfAuthored .o-mail-Message-core,
+// .o-zencore-helpdesk-thread .o-mail-Message.o-selfAuthored .o-mail-Message-textContent {
+//     flex-direction: row-reverse;
+// }
+
+// .o-zencore-helpdesk-thread .o-mail-Message.o-selfAuthored .o-mail-Message-header {
+//     justify-content: flex-end;
+// }
+
+// .o-zencore-helpdesk-thread .o-mail-Message.o-selfAuthored .o-mail-Message-author {
+//     display: none;
+// }
+
+// .o-zencore-helpdesk-thread .o-mail-Message:not(.o-selfAuthored) {
+//     flex-direction: row;
+// }
+
+// .o-zencore-helpdesk-thread .o-mail-Composer-coreHeader > .text-truncate {
+//     border-left: 3px solid var(--o-brand-primary);
+//     background: rgba(0, 0, 0, 0.04);
+//     border-radius: 6px;
+//     margin-bottom: 0.25rem;
+// }
+
+// .o_dark .o-zencore-helpdesk-thread.o-mail-Thread {
+//     background-color: #121416;
+// }
+
+// .o_dark .o-zencore-helpdesk-thread .o-mail-Composer-coreHeader > .text-truncate {
+//     background: rgba(255, 255, 255, 0.08);
+// }
+
+// Hide Odoo's original follower-recipient UI on helpdesk chatter.
+// This module sends explicit one-way notification emails instead.
+.o-zencore-helpdesk-chatter {
+    .o-mail-Chatter-topbar .o-mail-Followers,
+    .o-mail-Chatter-topbar .o-mail-Chatter-fileUploader,
+    .o-mail-Chatter-top > t > .d-flex.py-1.ps-3,
+    .o-mail-Chatter-top > .d-flex.py-1.ps-3 {
+        display: none !important;
+    }
+}

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_meta_api_log_list" model="ir.ui.view">
+        <field name="name">meta.api.log.list</field>
+        <field name="model">meta.api.log</field>
+        <field name="arch" type="xml">
+            <list string="Meta API Logs" create="false" edit="false">
+                <field name="create_date"/>
+                <field name="method"/>
+                <field name="endpoint"/>
+                <field name="status"/>
+                <field name="http_status"/>
+                <field name="duration_ms"/>
+                <field name="config_id"/>
+                <field name="error_message"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_meta_api_log_form" model="ir.ui.view">
+        <field name="name">meta.api.log.form</field>
+        <field name="model">meta.api.log</field>
+        <field name="arch" type="xml">
+            <form string="Meta API Log" create="false" edit="false">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="create_date"/>
+                            <field name="company_id"/>
+                            <field name="config_id"/>
+                            <field name="method"/>
+                            <field name="endpoint"/>
+                        </group>
+                        <group>
+                            <field name="status"/>
+                            <field name="http_status"/>
+                            <field name="duration_ms"/>
+                            <field name="error_message"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Request">
+                            <field name="request_payload" nolabel="1"/>
+                        </page>
+                        <page string="Response">
+                            <field name="response_payload" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_meta_api_log_search" model="ir.ui.view">
+        <field name="name">meta.api.log.search</field>
+        <field name="model">meta.api.log</field>
+        <field name="arch" type="xml">
+            <search string="Search API Logs">
+                <field name="endpoint"/>
+                <field name="method"/>
+                <field name="status"/>
+                <field name="http_status"/>
+                <filter string="Failed" name="failed" domain="[('status','=','failed')]"/>
+                <filter string="Success" name="success" domain="[('status','=','success')]"/>
+                <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
+                <filter string="Endpoint" name="group_endpoint" context="{'group_by': 'endpoint'}"/>
+                <filter string="HTTP Status" name="group_http" context="{'group_by': 'http_status'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_meta_api_log" model="ir.actions.act_window">
+        <field name="name">API Logs</field>
+        <field name="res_model">meta.api.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_meta_api_log_search"/>
+    </record>
+</odoo>

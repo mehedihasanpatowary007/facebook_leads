@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="rule_internal_requisition_product_line_approver_only" model="ir.rule">
+        <field name="name">Internal Requisition: Only Approvers Can Modify Product Lines</field>
+        <field name="model_id" ref="approvals.model_approval_product_line"/>
+        <field name="domain_force">
+            ['|',
+                ('approval_request_id.is_internal_requisition', '=', False),
+                ('approval_request_id.approver_ids.user_id', 'in', [user.id])
+            ]
+        </field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+</odoo>

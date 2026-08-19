@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_meta_lead_ads_root"
+              name="Meta Lead Ads"
+              sequence="60"
+              groups="meta_lead_ads_webhook.group_meta_lead_user"/>
+
+    <menuitem id="menu_meta_lead_ads_dashboard"
+              name="Leads"
+              parent="menu_meta_lead_ads_root"
+              sequence="10"
+              groups="meta_lead_ads_webhook.group_meta_lead_user"/>
+
+    <menuitem id="menu_meta_lead_queue"
+              name="Lead Queue"
+              parent="menu_meta_lead_ads_dashboard"
+              action="action_meta_lead_queue"
+              sequence="10"
+              groups="meta_lead_ads_webhook.group_meta_lead_user"/>
+
+    <menuitem id="menu_meta_crm_leads"
+              name="CRM Leads from Meta"
+              parent="menu_meta_lead_ads_dashboard"
+              action="action_crm_leads_from_meta"
+              sequence="20"
+              groups="meta_lead_ads_webhook.group_meta_lead_user"/>
+
+    <menuitem id="menu_meta_webhook_events"
+              name="Webhook Events"
+              parent="menu_meta_lead_ads_root"
+              action="action_meta_lead_webhook_event"
+              sequence="20"
+              groups="meta_lead_ads_webhook.group_meta_lead_user"/>
+
+    <menuitem id="menu_meta_lead_ads_config"
+              name="Configuration"
+              parent="menu_meta_lead_ads_root"
+              sequence="90"
+              groups="meta_lead_ads_webhook.group_meta_lead_manager"/>
+
+    <menuitem id="menu_meta_lead_connection"
+              name="Meta Connections"
+              parent="menu_meta_lead_ads_config"
+              action="action_meta_lead_connection"
+              sequence="10"
+              groups="meta_lead_ads_webhook.group_meta_lead_manager"/>
+
+    <menuitem id="menu_meta_lead_form_mapping"
+              name="Lead Form Mappings"
+              parent="menu_meta_lead_ads_config"
+              action="action_meta_lead_form_mapping"
+              sequence="20"
+              groups="meta_lead_ads_webhook.group_meta_lead_manager"/>
+</odoo>

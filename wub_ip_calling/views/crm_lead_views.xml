@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="crm_lead_form_ip_call_button" model="ir.ui.view">
+        <field name="name">crm.lead.form.ip.call.button</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//header" position="inside">
+
+                <button
+                    name="action_ip_call"
+                    type="object"
+                    string="IP Call"
+                    icon="fa-phone"
+                    class="btn-primary"/>
+
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

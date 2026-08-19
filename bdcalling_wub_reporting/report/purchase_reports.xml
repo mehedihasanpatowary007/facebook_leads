@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Custom Paper Format with 4cm top, 3cm bottom margins -->
+        <record id="paperformat_custom_purchase" model="report.paperformat">
+            <field name="name">Custom Purchase Quotation Format</field>
+            <field name="default" eval="False"/>
+            <field name="format">A4</field>
+            <field name="page_height">0</field>
+            <field name="page_width">0</field>
+            <field name="orientation">Portrait</field>
+            <field name="margin_top">40</field><!-- 4cm = 40mm -->
+            <field name="margin_bottom">30</field><!-- 3cm = 30mm -->
+            <field name="margin_left">15</field>
+            <field name="margin_right">15</field>
+            <field name="header_line" eval="False"/>
+            <field name="header_spacing">0</field>
+            <field name="dpi">96</field>
+        </record>
+
+        <!-- Custom Minimal External Layout -->
+        <template id="external_layout_minimal">
+            <div t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id">
+                <t t-out="0"/>
+            </div>
+        </template>
+
+        <!-- Custom Purchase Quotation Report -->
+        <record id="action_report_purchase_quotation_custom" model="ir.actions.report">
+            <field name="name">Custom Purchase Quotation</field>
+            <field name="model">purchase.order</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">bdcalling_wub_reporting.report_purchase_quotation_custom</field>
+            <field name="report_file">bdcalling_wub_reporting.report_purchase_quotation_custom</field>
+            <field name="print_report_name">'Quotation - %s' % (object.name)</field>
+            <field name="binding_model_id" ref="purchase.model_purchase_order"/>
+            <field name="binding_type">report</field>
+            <field name="paperformat_id" ref="paperformat_custom_purchase"/>
+        </record>
+    </data>
+</odoo>

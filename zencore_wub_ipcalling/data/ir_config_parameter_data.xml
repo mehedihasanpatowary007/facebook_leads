@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Intentionally empty.
+
+        Do not create ir.config_parameter records here because ir_config_parameter.key
+        is unique and can already exist when users save Settings or reinstall/upgrade
+        the module. Default values are defined in Python.
+    -->
+</odoo>

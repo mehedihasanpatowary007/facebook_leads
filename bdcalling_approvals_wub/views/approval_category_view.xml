@@ -1,0 +1,27 @@
+<odoo>
+    <record id="approval_category_view_form_internal_requisition" model="ir.ui.view">
+        <field name="name">approval.category.form.internal.requisition</field>
+        <field name="model">approval.category</field>
+        <field name="inherit_id" ref="approvals.approval_category_view_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//page[@name='options']" position="inside">
+                <group string="Internal Transfer Configuration"
+                       invisible="approval_type != 'internal_requisition'"
+                       col="2">
+
+                    <field name="warehouse_id" options="{'no_create': True}"/>
+
+                    <field name="operation_type_id"
+                           domain="[('code', '=', 'internal'), ('warehouse_id', '=', warehouse_id)]"
+                           options="{'no_create': True}"/>
+
+                    <field name="location_src_id" options="{'no_create': True}"/>
+                    <field name="location_dest_id" options="{'no_create': True}"/>
+
+                </group>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

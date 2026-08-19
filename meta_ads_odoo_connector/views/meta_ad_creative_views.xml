@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_meta_ad_creative_list" model="ir.ui.view">
+        <field name="name">meta.ad.creative.list</field>
+        <field name="model">meta.ad.creative</field>
+        <field name="arch" type="xml">
+            <list string="Meta Creatives">
+                <field name="name"/>
+                <field name="ad_account_id"/>
+                <field name="title"/>
+                <field name="call_to_action_type"/>
+                <field name="link_url"/>
+                <field name="last_sync_at"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_meta_ad_creative_form" model="ir.ui.view">
+        <field name="name">meta.ad.creative.form</field>
+        <field name="model">meta.ad.creative</field>
+        <field name="arch" type="xml">
+            <form string="Meta Creative">
+                <sheet>
+                    <group>
+                        <group string="Creative">
+                            <field name="name"/>
+                            <field name="company_id"/>
+                            <field name="config_id"/>
+                            <field name="ad_account_id"/>
+                            <field name="meta_creative_id"/>
+                            <field name="object_story_id"/>
+                            <field name="page_id"/>
+                            <field name="instagram_actor_id"/>
+                        </group>
+                        <group string="Content">
+                            <field name="title"/>
+                            <field name="body"/>
+                            <field name="call_to_action_type"/>
+                            <field name="link_url"/>
+                            <field name="url_tags"/>
+                            <field name="last_sync_at" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Media">
+                        <field name="image_hash"/>
+                        <field name="image_url"/>
+                        <field name="thumbnail_url"/>
+                        <field name="video_id"/>
+                    </group>
+                    <notebook>
+                        <page string="Object Story Spec">
+                            <field name="object_story_spec_json" nolabel="1"/>
+                        </page>
+                        <page string="Asset Feed Spec">
+                            <field name="asset_feed_spec_json" nolabel="1"/>
+                        </page>
+                        <page string="Raw Payload" groups="meta_ads_odoo_connector.group_meta_ads_technical">
+                            <field name="raw_payload" nolabel="1" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_meta_ad_creative_search" model="ir.ui.view">
+        <field name="name">meta.ad.creative.search</field>
+        <field name="model">meta.ad.creative</field>
+        <field name="arch" type="xml">
+            <search string="Search Creatives">
+                <field name="name"/>
+                <field name="meta_creative_id"/>
+                <field name="title"/>
+                <field name="link_url"/>
+                <filter string="Ad Account" name="group_account" context="{'group_by': 'ad_account_id'}"/>
+                <filter string="CTA" name="group_cta" context="{'group_by': 'call_to_action_type'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_meta_ad_creative" model="ir.actions.act_window">
+        <field name="name">Creatives</field>
+        <field name="res_model">meta.ad.creative</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_meta_ad_creative_search"/>
+    </record>
+</odoo>

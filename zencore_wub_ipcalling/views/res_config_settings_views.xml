@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_inherit_wub_ipcalling" model="ir.ui.view">
+        <field name="name">res.config.settings.form.inherit.wub.ipcalling</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="WUB IP Calling" string="WUB IP Calling" name="zencore_wub_ipcalling">
+                    <block title="Click To Call API Configuration">
+                        <setting string="Enable IP Calling" help="Enable or disable the CRM IP Call button integration.">
+                            <field name="wub_ipcalling_enabled"/>
+                        </setting>
+                        <setting string="API Endpoint" help="External API endpoint used by the IP Call button.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="wub_ipcalling_base_url" class="col-lg-3 o_light_label"/>
+                                    <field name="wub_ipcalling_base_url" class="col-lg-9" placeholder="https://worlduni.ihelpbd.com"/>
+                                </div>
+                                <div class="row mt8">
+                                    <label for="wub_ipcalling_endpoint_path" class="col-lg-3 o_light_label"/>
+                                    <field name="wub_ipcalling_endpoint_path" class="col-lg-9" placeholder="/wub/api/click_to_call.php"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Authorization" help="Authorization header value supplied by the external API provider.">
+                            <field name="wub_ipcalling_authorization" password="True" placeholder="iHelpBD@Authorization@"/>
+                        </setting>
+                        <setting string="Request Format" help="Use Auto first. It follows the API document with JSON, then retries form-urlencoded if the provider returns Method Not Allowed/body-format errors.">
+                            <field name="wub_ipcalling_request_format"/>
+                        </setting>
+                        <setting string="Timeout" help="How long Odoo waits for the API response before marking the call as timeout.">
+                            <field name="wub_ipcalling_timeout"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+</odoo>

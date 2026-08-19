@@ -1,0 +1,17 @@
+#portal_ts_open_modal {
+    font-weight: 600;
+}
+#portalTimesheetModal .modal-header {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+}
+#portalTimesheetModal select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+@keyframes ts_row_flash {
+    0%   { background-color: rgba(25,135,84,.2); }
+    100% { background-color: transparent; }
+}
+.portal_ts_new_row {
+    animation: ts_row_flash 2.5s ease forwards;
+}

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_meta_lead_form_list" model="ir.ui.view">
+        <field name="name">meta.lead.form.list</field>
+        <field name="model">meta.lead.form</field>
+        <field name="arch" type="xml">
+            <list string="Meta Lead Forms">
+                <field name="name"/>
+                <field name="meta_form_id"/>
+                <field name="meta_page_id"/>
+                <field name="crm_team_id"/>
+                <field name="user_id"/>
+                <field name="last_import_at"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_meta_lead_form_form" model="ir.ui.view">
+        <field name="name">meta.lead.form.form</field>
+        <field name="model">meta.lead.form</field>
+        <field name="arch" type="xml">
+            <form string="Meta Lead Form">
+                <header>
+                    <button name="action_import_latest_leads" type="object" string="Import Latest Leads" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Meta Form">
+                            <field name="name"/>
+                            <field name="company_id"/>
+                            <field name="config_id"/>
+                            <field name="ad_account_id"/>
+                            <field name="meta_form_id"/>
+                            <field name="meta_page_id"/>
+                            <field name="page_name"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="CRM Routing">
+                            <field name="crm_team_id"/>
+                            <field name="user_id"/>
+                            <field name="tag_ids" widget="many2many_tags"/>
+                            <field name="last_import_at" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Field Mapping">
+                            <field name="field_mapping_json" nolabel="1"/>
+                        </page>
+                        <page string="Raw Payload" groups="meta_ads_odoo_connector.group_meta_ads_technical">
+                            <field name="raw_payload" nolabel="1" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_meta_lead_form_search" model="ir.ui.view">
+        <field name="name">meta.lead.form.search</field>
+        <field name="model">meta.lead.form</field>
+        <field name="arch" type="xml">
+            <search string="Search Lead Forms">
+                <field name="name"/>
+                <field name="meta_form_id"/>
+                <field name="meta_page_id"/>
+                <field name="crm_team_id"/>
+                <field name="user_id"/>
+                <filter string="Active" name="active" domain="[('active','=',True)]"/>
+                <filter string="Sales Team" name="group_team" context="{'group_by': 'crm_team_id'}"/>
+                <filter string="Salesperson" name="group_user" context="{'group_by': 'user_id'}"/>
+                <filter string="Company" name="group_company" context="{'group_by': 'company_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_meta_lead_form" model="ir.actions.act_window">
+        <field name="name">Lead Forms</field>
+        <field name="res_model">meta.lead.form</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_meta_lead_form_search"/>
+    </record>
+</odoo>

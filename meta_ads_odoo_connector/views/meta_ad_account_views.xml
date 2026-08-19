@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_meta_ad_account_list" model="ir.ui.view">
+        <field name="name">meta.ad.account.list</field>
+        <field name="model">meta.ad.account</field>
+        <field name="arch" type="xml">
+            <list string="Meta Ad Accounts">
+                <field name="display_account_id"/>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="currency"/>
+                <field name="timezone_name"/>
+                <field name="account_status"/>
+                <field name="amount_spent"/>
+                <field name="last_sync_at"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_meta_ad_account_form" model="ir.ui.view">
+        <field name="name">meta.ad.account.form</field>
+        <field name="model">meta.ad.account</field>
+        <field name="arch" type="xml">
+            <form string="Meta Ad Account">
+                <header>
+                    <button name="action_sync_campaigns" type="object" string="Sync Campaigns" class="btn-secondary"/>
+                    <button name="action_sync_ad_sets" type="object" string="Sync Ad Sets" class="btn-secondary"/>
+                    <button name="action_sync_creatives_and_ads" type="object" string="Sync Ads" class="btn-secondary"/>
+                    <button name="action_sync_recent_insights" type="object" string="Sync Insights" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Account">
+                            <field name="name"/>
+                            <field name="company_id"/>
+                            <field name="config_id"/>
+                            <field name="meta_account_id"/>
+                            <field name="display_account_id"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Status">
+                            <field name="account_status"/>
+                            <field name="disable_reason"/>
+                            <field name="timezone_name"/>
+                            <field name="currency"/>
+                            <field name="currency_id"/>
+                            <field name="last_sync_at" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Spend">
+                        <field name="amount_spent"/>
+                        <field name="balance"/>
+                        <field name="spend_cap"/>
+                    </group>
+                    <notebook>
+                        <page string="Campaigns">
+                            <field name="campaign_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="objective"/>
+                                    <field name="status"/>
+                                    <field name="effective_status"/>
+                                    <field name="daily_budget"/>
+                                    <field name="last_sync_at"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Raw Payload" groups="meta_ads_odoo_connector.group_meta_ads_technical">
+                            <field name="raw_payload" nolabel="1" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_meta_ad_account_search" model="ir.ui.view">
+        <field name="name">meta.ad.account.search</field>
+        <field name="model">meta.ad.account</field>
+        <field name="arch" type="xml">
+            <search string="Search Meta Ad Accounts">
+                <field name="name"/>
+                <field name="display_account_id"/>
+                <field name="company_id"/>
+                <field name="currency"/>
+                <filter string="Active" name="active" domain="[('active','=',True)]"/>
+                <filter string="Company" name="group_company" context="{'group_by': 'company_id'}"/>
+                <filter string="Currency" name="group_currency" context="{'group_by': 'currency'}"/>
+                <filter string="Status" name="group_status" context="{'group_by': 'account_status'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_meta_ad_account" model="ir.actions.act_window">
+        <field name="name">Ad Accounts</field>
+        <field name="res_model">meta.ad.account</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_meta_ad_account_search"/>
+    </record>
+</odoo>

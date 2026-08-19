@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_meta_lead_connection_user,meta.lead.connection user,model_meta_lead_connection,meta_lead_ads_webhook.group_meta_lead_user,1,0,0,0
+access_meta_lead_connection_manager,meta.lead.connection manager,model_meta_lead_connection,meta_lead_ads_webhook.group_meta_lead_manager,1,1,1,0
+access_meta_lead_connection_technical,meta.lead.connection technical,model_meta_lead_connection,meta_lead_ads_webhook.group_meta_lead_technical,1,1,1,1
+access_meta_lead_form_mapping_user,meta.lead.form.mapping user,model_meta_lead_form_mapping,meta_lead_ads_webhook.group_meta_lead_user,1,0,0,0
+access_meta_lead_form_mapping_manager,meta.lead.form.mapping manager,model_meta_lead_form_mapping,meta_lead_ads_webhook.group_meta_lead_manager,1,1,1,1
+access_meta_lead_form_field_map_user,meta.lead.form.field.map user,model_meta_lead_form_field_map,meta_lead_ads_webhook.group_meta_lead_user,1,0,0,0
+access_meta_lead_form_field_map_manager,meta.lead.form.field.map manager,model_meta_lead_form_field_map,meta_lead_ads_webhook.group_meta_lead_manager,1,1,1,1
+access_meta_lead_webhook_event_user,meta.lead.webhook.event user,model_meta_lead_webhook_event,meta_lead_ads_webhook.group_meta_lead_user,1,0,0,0
+access_meta_lead_webhook_event_manager,meta.lead.webhook.event manager,model_meta_lead_webhook_event,meta_lead_ads_webhook.group_meta_lead_manager,1,1,1,0
+access_meta_lead_webhook_event_technical,meta.lead.webhook.event technical,model_meta_lead_webhook_event,meta_lead_ads_webhook.group_meta_lead_technical,1,1,1,1
+access_meta_lead_queue_user,meta.lead.queue user,model_meta_lead_queue,meta_lead_ads_webhook.group_meta_lead_user,1,0,0,0
+access_meta_lead_queue_manager,meta.lead.queue manager,model_meta_lead_queue,meta_lead_ads_webhook.group_meta_lead_manager,1,1,1,1

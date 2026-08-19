@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_meta_ads_insight_list" model="ir.ui.view">
+        <field name="name">meta.ads.insight.list</field>
+        <field name="model">meta.ads.insight</field>
+        <field name="arch" type="xml">
+            <list string="Meta Ads Insights" create="false" edit="false">
+                <field name="date_start"/>
+                <field name="ad_account_id"/>
+                <field name="campaign_name"/>
+                <field name="adset_name"/>
+                <field name="ad_name"/>
+                <field name="spend" sum="Total Spend"/>
+                <field name="impressions" sum="Impressions"/>
+                <field name="reach" sum="Reach"/>
+                <field name="clicks" sum="Clicks"/>
+                <field name="leads" sum="Leads"/>
+                <field name="purchases" sum="Purchases"/>
+                <field name="purchase_value" sum="Purchase Value"/>
+                <field name="cost_per_lead"/>
+                <field name="roas"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_meta_ads_insight_form" model="ir.ui.view">
+        <field name="name">meta.ads.insight.form</field>
+        <field name="model">meta.ads.insight</field>
+        <field name="arch" type="xml">
+            <form string="Meta Ads Insight" create="false" edit="false">
+                <sheet>
+                    <group>
+                        <group string="Date &amp; Account">
+                            <field name="date_start"/>
+                            <field name="date_stop"/>
+                            <field name="company_id"/>
+                            <field name="config_id"/>
+                            <field name="ad_account_id"/>
+                        </group>
+                        <group string="Objects">
+                            <field name="campaign_id"/>
+                            <field name="adset_id"/>
+                            <field name="ad_id"/>
+                            <field name="campaign_name"/>
+                            <field name="adset_name"/>
+                            <field name="ad_name"/>
+                        </group>
+                    </group>
+                    <group string="Delivery Metrics">
+                        <field name="spend"/>
+                        <field name="impressions"/>
+                        <field name="reach"/>
+                        <field name="frequency"/>
+                        <field name="clicks"/>
+                        <field name="inline_link_clicks"/>
+                        <field name="ctr"/>
+                        <field name="cpc"/>
+                        <field name="cpm"/>
+                        <field name="cpp"/>
+                    </group>
+                    <group string="Business Metrics">
+                        <field name="leads"/>
+                        <field name="purchases"/>
+                        <field name="purchase_value"/>
+                        <field name="cost_per_lead"/>
+                        <field name="cost_per_purchase"/>
+                        <field name="roas"/>
+                    </group>
+                    <notebook>
+                        <page string="Actions">
+                            <field name="actions_json" nolabel="1"/>
+                        </page>
+                        <page string="Action Values">
+                            <field name="action_values_json" nolabel="1"/>
+                        </page>
+                        <page string="Raw Payload" groups="meta_ads_odoo_connector.group_meta_ads_technical">
+                            <field name="raw_payload" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_meta_ads_insight_pivot" model="ir.ui.view">
+        <field name="name">meta.ads.insight.pivot</field>
+        <field name="model">meta.ads.insight</field>
+        <field name="arch" type="xml">
+            <pivot string="Meta Ads Performance">
+                <field name="date_start" type="row" interval="day"/>
+                <field name="campaign_id" type="row"/>
+                <field name="spend" type="measure"/>
+                <field name="leads" type="measure"/>
+                <field name="purchases" type="measure"/>
+                <field name="purchase_value" type="measure"/>
+                <field name="impressions" type="measure"/>
+                <field name="clicks" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_meta_ads_insight_graph" model="ir.ui.view">
+        <field name="name">meta.ads.insight.graph</field>
+        <field name="model">meta.ads.insight</field>
+        <field name="arch" type="xml">
+            <graph string="Meta Ads Spend" type="line">
+                <field name="date_start" interval="day"/>
+                <field name="spend" type="measure"/>
+                <field name="leads" type="measure"/>
+                <field name="purchase_value" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_meta_ads_insight_search" model="ir.ui.view">
+        <field name="name">meta.ads.insight.search</field>
+        <field name="model">meta.ads.insight</field>
+        <field name="arch" type="xml">
+            <search string="Search Insights">
+                <field name="date_start"/>
+                <field name="ad_account_id"/>
+                <field name="campaign_id"/>
+                <field name="adset_id"/>
+                <field name="ad_id"/>
+                <field name="campaign_name"/>
+                <field name="ad_name"/>
+                <filter string="Today" name="today" domain="[('date_start', '=', context_today())]"/>
+                <filter string="Ad Account" name="group_account" context="{'group_by': 'ad_account_id'}"/>
+                <filter string="Campaign" name="group_campaign" context="{'group_by': 'campaign_id'}"/>
+                <filter string="Ad Set" name="group_adset" context="{'group_by': 'adset_id'}"/>
+                <filter string="Ad" name="group_ad" context="{'group_by': 'ad_id'}"/>
+                <filter string="Date" name="group_date" context="{'group_by': 'date_start'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_meta_ads_insight" model="ir.actions.act_window">
+        <field name="name">Ads Insights</field>
+        <field name="res_model">meta.ads.insight</field>
+        <field name="view_mode">list,pivot,graph,form</field>
+        <field name="search_view_id" ref="view_meta_ads_insight_search"/>
+    </record>
+</odoo>

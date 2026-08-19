@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="module_category_meta_ads" model="ir.module.category">
+        <field name="name">Meta Ads</field>
+        <field name="description">Meta/Facebook Ads integration access groups</field>
+        <field name="sequence">35</field>
+    </record>
+
+    <record id="res_groups_privilege_meta_ads" model="res.groups.privilege">
+        <field name="name">Meta Ads</field>
+        <field name="category_id" ref="module_category_meta_ads"/>
+        <field name="sequence">35</field>
+    </record>
+
+    <record id="group_meta_ads_user" model="res.groups">
+        <field name="name">User</field>
+        <field name="privilege_id" ref="res_groups_privilege_meta_ads"/>
+        <field name="comment">Can read Meta Ads dashboards and records.</field>
+    </record>
+
+    <record id="group_meta_ads_manager" model="res.groups">
+        <field name="name">Manager</field>
+        <field name="privilege_id" ref="res_groups_privilege_meta_ads"/>
+        <field name="implied_ids" eval="[(4, ref('group_meta_ads_user'))]"/>
+        <field name="comment">Can manage synced Meta Ads records and lead mappings.</field>
+    </record>
+
+    <record id="group_meta_ads_administrator" model="res.groups">
+        <field name="name">Administrator</field>
+        <field name="privilege_id" ref="res_groups_privilege_meta_ads"/>
+        <field name="implied_ids" eval="[(4, ref('group_meta_ads_manager'))]"/>
+        <field name="comment">Can configure Meta API connections and tokens.</field>
+    </record>
+
+    <record id="group_meta_ads_technical" model="res.groups">
+        <field name="name">Technical</field>
+        <field name="privilege_id" ref="res_groups_privilege_meta_ads"/>
+        <field name="implied_ids" eval="[(4, ref('group_meta_ads_administrator'))]"/>
+        <field name="comment">Can access raw payloads, technical logs and debugging information.</field>
+    </record>
+
+    <!-- Multi-company rules -->
+    <record id="rule_meta_ads_config_company" model="ir.rule">
+        <field name="name">Meta Ads Config: company restriction</field>
+        <field name="model_id" ref="model_meta_ads_config"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_meta_ads_user'))]"/>
+    </record>
+
+    <record id="rule_meta_ad_account_company" model="ir.rule">
+        <field name="name">Meta Ad Account: company restriction</field>
+        <field name="model_id" ref="model_meta_ad_account"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_meta_ads_user'))]"/>
+    </record>
+
+    <record id="rule_meta_campaign_company" model="ir.rule">
+        <field name="name">Meta Campaign: company restriction</field>
+        <field name="model_id" ref="model_meta_campaign"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_meta_ads_user'))]"/>
+    </record>
+
+    <record id="rule_meta_ad_set_company" model="ir.rule">
+        <field name="name">Meta Ad Set: company restriction</field>
+        <field name="model_id" ref="model_meta_ad_set"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_meta_ads_user'))]"/>
+    </record>
+
+    <record id="rule_meta_ad_company" model="ir.rule">
+        <field name="name">Meta Ad: company restriction</field>
+        <field name="model_id" ref="model_meta_ad"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_meta_ads_user'))]"/>
+    </record>
+
+    <record id="rule_meta_ad_creative_company" model="ir.rule">
+        <field name="name">Meta Creative: company restriction</field>
+        <field name="model_id" ref="model_meta_ad_creative"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_meta_ads_user'))]"/>
+    </record>
+
+    <record id="rule_meta_ads_insight_company" model="ir.rule">
+        <field name="name">Meta Insight: company restriction</field>
+        <field name="model_id" ref="model_meta_ads_insight"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_meta_ads_user'))]"/>
+    </record>
+
+    <record id="rule_meta_lead_form_company" model="ir.rule">
+        <field name="name">Meta Lead Form: company restriction</field>
+        <field name="model_id" ref="model_meta_lead_form"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_meta_ads_user'))]"/>
+    </record>
+
+    <record id="rule_meta_conversion_event_company" model="ir.rule">
+        <field name="name">Meta Conversion Event: company restriction</field>
+        <field name="model_id" ref="model_meta_conversion_event"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_meta_ads_user'))]"/>
+    </record>
+
+    <record id="rule_meta_api_log_company" model="ir.rule">
+        <field name="name">Meta API Log: company restriction</field>
+        <field name="model_id" ref="model_meta_api_log"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_meta_ads_technical'))]"/>
+    </record>
+</odoo>

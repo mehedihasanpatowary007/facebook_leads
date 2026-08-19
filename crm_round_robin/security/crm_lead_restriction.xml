@@ -1,0 +1,21 @@
+<odoo>
+    <data noupdate="0">
+        <!-- 
+            This record rule is a backup layer.
+            The main restriction is enforced via Python _search override in crm_lead.py.
+            
+            This rule ensures 'User: Own Documents Only' users
+            cannot read leads not assigned to them.
+         -->
+        <record id="crm_lead_rule_own_documents" model="ir.rule">
+            <field name="name">CRM Lead: Own Documents Only (Salesperson restriction)</field>
+            <field name="model_id" ref="crm.model_crm_lead"/>
+            <field name="domain_force">[('user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+    </data>
+</odoo>

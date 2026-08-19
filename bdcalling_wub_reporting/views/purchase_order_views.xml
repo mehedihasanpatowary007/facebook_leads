@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Inherit Purchase Order Form View -->
+        <record id="view_purchase_order_form_inherit" model="ir.ui.view">
+            <field name="name">purchase.order.form.inherit</field>
+            <field name="model">purchase.order</field>
+            <field name="inherit_id" ref="purchase.purchase_order_form"/>
+            <field name="arch" type="xml">
+                
+                <!-- Add Subject field after partner_ref -->
+                <xpath expr="//field[@name='partner_ref']" position="after">
+                    <field name="subject" placeholder="e.g., Work Order for Printing"/>
+                </xpath>
+                
+                <!-- Add Work Order Date -->
+                <xpath expr="//field[@name='date_order']" position="after">
+                    <field name="work_order_date"/>
+                </xpath>
+                
+                <!-- Add Terms and Conditions Tab - PROPER HTML FIELD -->
+                <xpath expr="//notebook" position="inside">
+                    <page string="Terms and Conditions" name="terms_conditions">
+                        <field name="term_note" widget="html" options="{'collaborative': true, 'resizable': true, 'codeview': true}"/>
+                    </page>
+                </xpath>
+                
+                <!-- Add Custom Calculations Tab -->
+                <xpath expr="//notebook" position="inside">
+                    <page string="Custom Calculations" name="custom_calculations">
+                        <group>
+                            <group string="Settings">
+                                <field name="use_manual_calculations"/>
+                                <field name="vat_percentage_add" readonly="use_manual_calculations"/>
+                                <field name="vat_percentage_less" readonly="use_manual_calculations"/>
+                                <field name="ait_percentage" readonly="use_manual_calculations"/>
+                            </group>
+                            <group string="Amounts">
+                                <field name="base_amount" readonly="1"/>
+                                <field name="total_amount" readonly="1"/>
+                                <field name="vat_add_amount" invisible="use_manual_calculations" readonly="1"/>
+                                <field name="vat_add_amount_manual" invisible="not use_manual_calculations"/>
+                                <field name="sub_total_amount" readonly="1"/>
+                                <field name="vat_less_amount" invisible="use_manual_calculations" readonly="1"/>
+                                <field name="vat_less_amount_manual" invisible="not use_manual_calculations"/>
+                                <field name="ait_amount" invisible="use_manual_calculations" readonly="1"/>
+                                <field name="ait_amount_manual" invisible="not use_manual_calculations"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="net_payable_amount" readonly="1" class="oe_subtotal_footer_separator"/>
+                        </group>
+                    </page>
+                </xpath>
+                
+            </field>
+        </record>
+    </data>
+</odoo>

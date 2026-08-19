@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="approval_request_form_internal_transfer" model="ir.ui.view">
+        <field name="name">approval.request.form.internal.transfer</field>
+        <field name="model">approval.request</field>
+        <field name="inherit_id" ref="approvals.approval_request_view_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//sheet" position="before">
+                <field name="is_internal_requisition" invisible="1"/>
+                <field name="picking_id" invisible="1"/>
+                <field name="transfer_created" invisible="1"/>
+            </xpath>
+
+            <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
+                <button
+                    name="action_open_internal_transfer"
+                    type="object"
+                    class="oe_stat_button"
+                    icon="fa-exchange"
+                    invisible="not picking_id"
+                >
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">Internal</span>
+                        <span class="o_stat_text">Transfer</span>
+                    </div>
+                </button>
+            </xpath>
+
+            <xpath expr="//header" position="inside">
+
+                <button
+                    name="action_create_internal_transfer"
+                    type="object"
+                    string="Create Transfer"
+                    class="btn-primary"
+                    invisible="request_status != 'approved' or not is_internal_requisition or picking_id != False"
+                />
+
+            </xpath>
+
+            <!--Hide Withdraw button when approved (for internal requisition) -->
+            <xpath expr="//button[@name='action_withdraw']" position="attributes">
+                <attribute name="invisible">is_internal_requisition and request_status == 'approved'</attribute>
+            </xpath>
+
+            <!--Make product lines readonly after transfer is created -->
+            <xpath expr="//field[@name='product_line_ids']" position="attributes">
+                <attribute name="readonly">is_internal_requisition and transfer_created</attribute>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

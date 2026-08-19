@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_facebook_lead_config_manager,facebook.lead.config manager,model_facebook_lead_config,zencore_facebook_leads.group_facebook_lead_manager,1,1,1,1
+access_facebook_lead_config_crm_user,facebook.lead.config crm user,model_facebook_lead_config,sales_team.group_sale_salesman,1,0,0,0
+access_facebook_lead_mapping_manager,facebook.lead.mapping manager,model_facebook_lead_mapping,zencore_facebook_leads.group_facebook_lead_manager,1,1,1,1
+access_facebook_campaign_mapping_manager,facebook.campaign.mapping manager,model_facebook_campaign_mapping,zencore_facebook_leads.group_facebook_lead_manager,1,1,1,1
+access_facebook_lead_log_manager,facebook.lead.log manager,model_facebook_lead_log,zencore_facebook_leads.group_facebook_lead_manager,1,1,1,0

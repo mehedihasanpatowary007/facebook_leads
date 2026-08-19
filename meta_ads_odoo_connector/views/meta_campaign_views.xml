@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_meta_campaign_list" model="ir.ui.view">
+        <field name="name">meta.campaign.list</field>
+        <field name="model">meta.campaign</field>
+        <field name="arch" type="xml">
+            <list string="Meta Campaigns">
+                <field name="name"/>
+                <field name="ad_account_id"/>
+                <field name="objective"/>
+                <field name="status"/>
+                <field name="effective_status"/>
+                <field name="daily_budget"/>
+                <field name="lifetime_budget"/>
+                <field name="last_sync_at"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_meta_campaign_form" model="ir.ui.view">
+        <field name="name">meta.campaign.form</field>
+        <field name="model">meta.campaign</field>
+        <field name="arch" type="xml">
+            <form string="Meta Campaign">
+                <sheet>
+                    <group>
+                        <group string="Campaign">
+                            <field name="name"/>
+                            <field name="company_id"/>
+                            <field name="config_id"/>
+                            <field name="ad_account_id"/>
+                            <field name="meta_campaign_id"/>
+                            <field name="utm_campaign_id"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Status &amp; Budget">
+                            <field name="objective"/>
+                            <field name="status"/>
+                            <field name="effective_status"/>
+                            <field name="buying_type"/>
+                            <field name="daily_budget"/>
+                            <field name="lifetime_budget"/>
+                            <field name="spend_cap"/>
+                        </group>
+                    </group>
+                    <group string="Schedule">
+                        <field name="start_time"/>
+                        <field name="stop_time"/>
+                        <field name="last_sync_at" readonly="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Ad Sets">
+                            <field name="ad_set_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="status"/>
+                                    <field name="effective_status"/>
+                                    <field name="daily_budget"/>
+                                    <field name="optimization_goal"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Special Categories">
+                            <field name="special_ad_categories" nolabel="1"/>
+                        </page>
+                        <page string="Raw Payload" groups="meta_ads_odoo_connector.group_meta_ads_technical">
+                            <field name="raw_payload" nolabel="1" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_meta_campaign_search" model="ir.ui.view">
+        <field name="name">meta.campaign.search</field>
+        <field name="model">meta.campaign</field>
+        <field name="arch" type="xml">
+            <search string="Search Campaigns">
+                <field name="name"/>
+                <field name="meta_campaign_id"/>
+                <field name="ad_account_id"/>
+                <field name="objective"/>
+                <field name="status"/>
+                <filter string="Active" name="active" domain="[('active','=',True)]"/>
+                <filter string="Ad Account" name="group_account" context="{'group_by': 'ad_account_id'}"/>
+                <filter string="Objective" name="group_objective" context="{'group_by': 'objective'}"/>
+                <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_meta_campaign" model="ir.actions.act_window">
+        <field name="name">Campaigns</field>
+        <field name="res_model">meta.campaign</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_meta_campaign_search"/>
+    </record>
+</odoo>

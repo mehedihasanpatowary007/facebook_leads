@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- 
+        Override the task_id field domain in account.analytic.line form view.
+        Filter tasks to only show tasks where the current user is assigned (user_ids).
+        This applies to BOTH internal and portal users.
+    -->
+    <record id="view_timesheet_form_inherit_task_domain" model="ir.ui.view">
+        <field name="name">account.analytic.line.form.inherit.task.domain</field>
+        <field name="model">account.analytic.line</field>
+        <field name="inherit_id" ref="hr_timesheet.hr_timesheet_line_form"/>
+        <field name="arch" type="xml">
+            
+            <!-- Update task_id domain to filter by user assignment -->
+            <xpath expr="//field[@name='task_id']" position="attributes">
+                <attribute name="domain">
+                    [
+                        ('allow_timesheets', '=', True),
+                        ('project_id', '=?', project_id),
+                        ('user_ids', 'in', uid)
+                    ]
+                </attribute>
+                <attribute name="context">
+                    {
+                        'default_project_id': project_id,
+                        'search_default_my_tasks': True,
+                        'search_default_open_tasks': True
+                    }
+                </attribute>
+            </xpath>
+            
+        </field>
+    </record>
+
+    <!-- Also update the tree view (list) for consistency -->
+    <record id="view_timesheet_tree_inherit_task_domain" model="ir.ui.view">
+        <field name="name">account.analytic.line.tree.inherit.task.domain</field>
+        <field name="model">account.analytic.line</field>
+        <field name="inherit_id" ref="hr_timesheet.hr_timesheet_line_tree"/>
+        <field name="arch" type="xml">
+            
+            <xpath expr="//field[@name='task_id']" position="attributes">
+                <attribute name="domain">
+                    [
+                        ('allow_timesheets', '=', True),
+                        ('project_id', '=?', project_id),
+                        ('user_ids', 'in', uid)
+                    ]
+                </attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
