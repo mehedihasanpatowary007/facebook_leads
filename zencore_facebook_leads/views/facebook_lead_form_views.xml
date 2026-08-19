@@ -1,0 +1,56 @@
+<odoo>
+    <record id="view_facebook_lead_form_list" model="ir.ui.view">
+        <field name="name">facebook.lead.form.list</field>
+        <field name="model">facebook.lead.form</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="facebook_form_id"/>
+                <field name="config_id"/>
+                <field name="status"/>
+                <field name="mapping_count"/>
+                <field name="last_refreshed_at" optional="hide"/>
+                <button name="action_refresh_fields" type="object" string="Refresh Fields"/>
+                <button name="action_sync_leads" type="object" string="Fetch Leads" class="btn-primary"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_facebook_lead_form_form" model="ir.ui.view">
+        <field name="name">facebook.lead.form.form</field>
+        <field name="model">facebook.lead.form</field>
+        <field name="arch" type="xml">
+            <form string="Facebook Lead Form">
+                <header>
+                    <button name="action_sync_leads" type="object" string="Fetch Leads" class="btn-primary"/>
+                    <button name="action_refresh_fields" type="object" string="Refresh Form Fields" class="btn-secondary"/>
+                </header>
+                <sheet>
+                    <div class="alert alert-info" role="alert"><strong>Ready to import:</strong> Review the mapping below. Facebook questions without a target field remain visible and can be mapped manually.</div>
+                    <group>
+                        <group><field name="name"/><field name="facebook_form_id"/><field name="active"/></group>
+                        <group><field name="config_id"/><field name="status" readonly="1"/><field name="mapping_count" readonly="1"/><field name="last_refreshed_at" readonly="1"/></group>
+                    </group>
+                    <notebook>
+                        <page string="CRM Field Mapping">
+                            <field name="mapping_ids" context="{'default_config_id': config_id, 'default_form_id': id, 'default_facebook_form_id': facebook_form_id, 'default_facebook_form_name': name}">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="facebook_field_name"/>
+                                    <field name="odoo_field_id"/>
+                                    <field name="required"/>
+                                    <field name="active"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                    <field name="last_error_message" readonly="1" invisible="not last_error_message"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_facebook_lead_form" model="ir.actions.act_window">
+        <field name="name">Facebook Lead Forms</field>
+        <field name="res_model">facebook.lead.form</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

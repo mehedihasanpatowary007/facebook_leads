@@ -138,10 +138,13 @@ class FacebookLeadLog(models.Model):
         Lead = self.env["crm.lead"]
         values = {}
         for mapping in mappings:
+            if not mapping.odoo_field_id:
+                continue
             raw_value = answers.get(mapping.facebook_field_name)
             if raw_value not in (False, None, ""):
                 values[mapping.odoo_field_id.name] = self._convert_value(Lead._fields[mapping.odoo_field_id.name], raw_value)
-        name = values.get("contact_name") or answers.get("full_name") or answers.get("name")
+        split_name = " ".join(filter(None, (answers.get("first_name"), answers.get("last_name"))))
+        name = values.get("contact_name") or answers.get("full_name") or answers.get("name") or split_name
         course = answers.get("interested_course") or answers.get("course") or values.get("course_id")
         values.setdefault("contact_name", name)
         values.setdefault("phone", answers.get("phone_number") or answers.get("phone"))

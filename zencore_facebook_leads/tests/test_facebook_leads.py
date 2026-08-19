@@ -47,3 +47,33 @@ class TestFacebookLeads(TransactionCase):
     def test_webhook_url_validation(self):
         with self.assertRaises(ValidationError):
             self.config.webhook_url = "http://example.test/wrong"
+
+    def test_account_oauth_url_contains_required_permissions(self):
+        account = self.env["facebook.lead.account"].create({
+            "name": "Test Meta App", "app_id": "123456", "app_secret": "secret",
+        })
+        action = account.action_connect_facebook()
+        self.assertIn("dialog/oauth", action["url"])
+        self.assertIn("leads_retrieval", action["url"])
+        self.assertIn("pages_manage_metadata", action["url"])
+        self.assertIn("pages_manage_ads", action["url"])
+        self.assertTrue(account.oauth_state)
+        self.assertEqual(account.oauth_user_id, self.env.user)
+
+    def test_invalid_graph_api_version_is_rejected(self):
+        with self.assertRaises(ValidationError):
+            self.env["facebook.lead.account"].create({
+                "name": "Invalid Meta App", "app_id": "654321",
+                "app_secret": "secret", "api_version": "25",
+            })
+
+    def test_unmapped_form_question_is_safe(self):
+        form = self.env["facebook.lead.form"].create({
+            "name": "Admissions", "config_id": self.config.id, "facebook_form_id": "20003",
+        })
+        mapping = self.env["facebook.lead.mapping"].create({
+            "config_id": self.config.id, "form_id": form.id,
+            "facebook_form_id": form.facebook_form_id, "facebook_form_name": form.name,
+            "facebook_field_name": "custom_question",
+        })
+        self.assertFalse(mapping.odoo_field_id)

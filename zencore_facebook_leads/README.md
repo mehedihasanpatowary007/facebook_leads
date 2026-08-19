@@ -1,6 +1,15 @@
 # Zencore Facebook Leads
 
-Supportive Odoo 19 CRM connector for Meta/Facebook Lead Ads. The addon does not create a separate application. Configuration and logs are available below **CRM → Configuration**, while imported records use the standard **CRM → Leads** workflow.
+Standalone, OAuth-enabled Odoo 19 CRM connector for Meta/Facebook Lead Ads. Administrators connect Facebook, import Pages and Forms, subscribe webhooks, map fields, and monitor synchronization from the **Facebook Leads** application. Imported records continue to use the standard **CRM > Leads** workflow.
+
+## Guided onboarding
+
+1. Enter a Meta App ID and App Secret under **Facebook Leads > Facebook App Credentials**.
+2. Click **Generate Token** and authorize the required Pages.
+3. Odoo retrieves Page tokens and attempts App callback and Page `leadgen` subscriptions automatically.
+4. Import each Page's Lead Forms and review the generated CRM field mappings.
+
+OAuth requests use a short-lived, user-bound state token. Page/Form discovery supports Graph API pagination, credentials are restricted to Sales Managers, and multi-company record rules isolate configuration and logs.
 
 ## Production flow
 
@@ -11,5 +20,3 @@ Supportive Odoo 19 CRM connector for Meta/Facebook Lead Ads. The addon does not 
 5. The backup cron incrementally discovers notifications missed by the webhook.
 
 See [FACEBOOK_CONFIGURATION.md](FACEBOOK_CONFIGURATION.md), [ODOO_CONFIGURATION.md](ODOO_CONFIGURATION.md), and [USER_MANUAL.md](USER_MANUAL.md).
-
-When field mappings contain exact Facebook Form IDs, **Test Connection** verifies those forms directly through their leads endpoint. It does not require `pages_manage_ads` merely to list every Page form. Without any configured Form ID, the test falls back to the Page form-list endpoint, for which Meta may require additional ad-management permission.

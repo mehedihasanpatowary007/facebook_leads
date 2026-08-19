@@ -1,4 +1,5 @@
 import logging
+import secrets
 from datetime import timezone
 from urllib.parse import urljoin
 
@@ -20,6 +21,7 @@ class FacebookLeadConfig(models.Model):
     name = fields.Char(required=True)
     active = fields.Boolean(default=True)
     company_id = fields.Many2one("res.company", required=True, default=lambda self: self.env.company)
+    account_id = fields.Many2one("facebook.lead.account", ondelete="set null")
     page_name = fields.Char(string="Facebook Page Name")
     page_id = fields.Char(string="Facebook Page ID", required=True, index=True)
     app_id = fields.Char(string="Meta App ID")
@@ -30,7 +32,7 @@ class FacebookLeadConfig(models.Model):
     validate_signature = fields.Boolean(default=True)
     webhook_url = fields.Char(
         string="Webhook URL",
-        default="https://wub-support-demo-34686622.dev.odoo.com/meta_lead_ads/webhook",
+        default=lambda self: self.env["ir.config_parameter"].sudo().get_param("web.base.url").rstrip("/") + "/meta_lead_ads/webhook",
         required=True,
         help="Public HTTPS callback registered in the Meta application.",
     )
@@ -53,10 +55,26 @@ class FacebookLeadConfig(models.Model):
     log_retention_days = fields.Integer(default=180, required=True)
     mapping_ids = fields.One2many("facebook.lead.mapping", "config_id")
     campaign_mapping_ids = fields.One2many("facebook.campaign.mapping", "config_id")
+    form_ids = fields.One2many("facebook.lead.form", "config_id", string="Lead Forms")
+    form_count = fields.Integer(compute="_compute_form_count")
+    webhook_subscribed = fields.Boolean(readonly=True, copy=False)
+    webhook_subscription_error = fields.Text(readonly=True, copy=False)
 
     _page_company_unique = models.Constraint(
         "UNIQUE(page_id, company_id)", "This Facebook Page is already configured for this company."
     )
+
+    def _compute_form_count(self):
+        for record in self:
+            record.form_count = len(record.form_ids)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        base_url = self.env["ir.config_parameter"].sudo().get_param("web.base.url").rstrip("/")
+        for values in vals_list:
+            values.setdefault("verify_token", secrets.token_urlsafe(32))
+            values.setdefault("webhook_url", base_url + "/meta_lead_ads/webhook")
+        return super().create(vals_list)
 
     @api.constrains("validate_signature", "app_secret")
     def _check_signature_config(self):
@@ -69,6 +87,13 @@ class FacebookLeadConfig(models.Model):
         for record in self:
             if not record.webhook_url.startswith("https://") or not record.webhook_url.rstrip("/").endswith("/meta_lead_ads/webhook"):
                 raise ValidationError(_("Webhook URL must use HTTPS and end with /meta_lead_ads/webhook."))
+
+    @api.constrains("api_version")
+    def _check_api_version(self):
+        for record in self:
+            version = (record.api_version or "").strip()
+            if not version.startswith("v") or not version[1:].replace(".", "", 1).isdigit():
+                raise ValidationError(_("Graph API Version must use a value such as v25.0."))
 
     @api.constrains("max_retry_count", "retry_delay_minutes", "processing_batch_size", "log_retention_days")
     def _check_positive_settings(self):
@@ -95,6 +120,150 @@ class FacebookLeadConfig(models.Model):
                 _("Meta API error [code %(code)s]: %(message)s", code=error.get("code") or response.status_code, message=error.get("message") or response.reason)
             )
         return payload
+
+    def _graph_iter(self, object_id, params=None):
+        self.ensure_one()
+        values = dict(params or {})
+        after = False
+        while True:
+            if after:
+                values["after"] = after
+            payload = self._graph_get(object_id, values)
+            yield from payload.get("data", [])
+            paging = payload.get("paging") or {}
+            after = (paging.get("cursors") or {}).get("after") if paging.get("next") else False
+            if not after:
+                break
+
+    def _graph_post(self, object_id, params=None):
+        self.ensure_one()
+        clean_version = self.api_version.strip().strip("/")
+        url = urljoin("https://graph.facebook.com/%s/" % clean_version, str(object_id).strip("/"))
+        safe_params = dict(params or {})
+        safe_params["access_token"] = self.page_access_token
+        try:
+            response = requests.post(url, data=safe_params, timeout=30)
+            payload = response.json()
+        except requests.RequestException as exc:
+            raise UserError(_("Meta API is unavailable: %s") % exc) from exc
+        except ValueError as exc:
+            raise UserError(_("Meta API returned an invalid response.")) from exc
+        if response.status_code >= 400 or payload.get("error"):
+            error = payload.get("error") or {}
+            raise UserError(_("Meta API error [code %(code)s]: %(message)s", code=error.get("code") or response.status_code, message=error.get("message") or response.reason))
+        return payload
+
+    def _subscribe_webhook(self):
+        self.ensure_one()
+        if not self.account_id:
+            raise UserError(_("Connect this Page through a Facebook Connection before automatic webhook setup."))
+        app_secret = self.account_id.app_secret or self.app_secret
+        if not app_secret:
+            raise UserError(_("The Meta App Secret is missing."))
+        self.account_id._request("POST", self.app_id + "/subscriptions", {
+            "object": "page",
+            "callback_url": self.webhook_url,
+            "verify_token": self.verify_token,
+            "fields": "leadgen",
+            "include_values": "true",
+        }, token="%s|%s" % (self.app_id, app_secret))
+        self._graph_post(self.page_id + "/subscribed_apps", {"subscribed_fields": "leadgen"})
+        self.write({"webhook_subscribed": True, "webhook_subscription_error": False})
+        return True
+
+    def action_subscribe_webhook(self):
+        self.ensure_one()
+        try:
+            self._subscribe_webhook()
+            notification_type = "success"
+            message = _("This Page now sends new lead notifications to the connected Meta App.")
+        except UserError as exc:
+            self.write({"webhook_subscribed": False, "webhook_subscription_error": str(exc)[:2000]})
+            notification_type = "warning"
+            message = str(exc)
+        return {"type": "ir.actions.client", "tag": "display_notification", "params": {
+            "title": _("Webhook Subscription"),
+            "message": message,
+            "type": notification_type,
+            "sticky": notification_type == "warning",
+        }}
+
+    def action_import_forms(self):
+        self.ensure_one()
+        Form = self.env["facebook.lead.form"].sudo()
+        imported = 0
+        failures = 0
+        for item in self._graph_iter(self.page_id + "/leadgen_forms", {"fields": "id,name,status", "limit": 100}):
+            facebook_form_id = str(item.get("id") or "")
+            if not facebook_form_id:
+                continue
+            form = Form.search([("config_id", "=", self.id), ("facebook_form_id", "=", facebook_form_id)], limit=1)
+            values = {"name": item.get("name") or facebook_form_id, "status": item.get("status")}
+            if form:
+                form.write(values)
+            else:
+                values.update({"config_id": self.id, "facebook_form_id": facebook_form_id})
+                form = Form.create(values)
+            try:
+                self._import_form_questions(form)
+                form.write({"last_error_message": False, "last_refreshed_at": fields.Datetime.now()})
+            except UserError as exc:
+                form.write({"last_error_message": str(exc)[:2000]})
+                failures += 1
+            imported += 1
+        return {"type": "ir.actions.client", "tag": "display_notification", "params": {
+            "title": _("Lead Forms Imported"),
+            "message": _("%(count)s form(s) imported; %(failed)s field refresh(es) require attention.", count=imported, failed=failures),
+            "type": "warning" if failures else "success",
+        }}
+
+    def _import_form_questions(self, form):
+        self.ensure_one()
+        payload = self._graph_get(form.facebook_form_id, {"fields": "id,name,status,questions"})
+        questions = payload.get("questions") or []
+        model = self.env["ir.model"]._get("crm.lead")
+        target_names = {
+            "full_name": "contact_name",
+            "email": "email_from", "phone_number": "phone", "phone": "phone",
+            "company_name": "partner_name", "job_title": "function", "city": "city",
+            "state": "state_id", "zip_code": "zip", "country": "country_id",
+        }
+        target_fields = {
+            field.name: field for field in self.env["ir.model.fields"].sudo().search([
+                ("model_id", "=", model.id), ("name", "in", list(set(target_names.values())))
+            ])
+        }
+        Mapping = self.env["facebook.lead.mapping"].sudo()
+        for sequence, question in enumerate(questions, 1):
+            key = question.get("key") or question.get("name")
+            if not key:
+                continue
+            mapping = Mapping.search([("config_id", "=", self.id), ("facebook_form_id", "=", form.facebook_form_id), ("facebook_field_name", "=", key)], limit=1)
+            values = {
+                "form_id": form.id,
+                "facebook_form_name": form.name,
+                "sequence": sequence * 10,
+            }
+            target = target_fields.get(target_names.get(key))
+            if target and not mapping:
+                values["odoo_field_id"] = target.id
+            if mapping:
+                mapping.write(values)
+            else:
+                values.update({"config_id": self.id, "facebook_form_id": form.facebook_form_id, "facebook_field_name": key})
+                Mapping.create(values)
+        return True
+
+    def action_open_forms(self):
+        self.ensure_one()
+        return {"type": "ir.actions.act_window", "name": _("Facebook Lead Forms"), "res_model": "facebook.lead.form", "view_mode": "list,form", "domain": [("config_id", "=", self.id)], "context": {"default_config_id": self.id}}
+
+    def _sync_single_form(self, form, full=False):
+        self.ensure_one()
+        before = self.env["facebook.lead.log"].sudo().search_count([("config_id", "=", self.id)])
+        self._backup_sync(full=full, selected_forms=form)
+        after = self.env["facebook.lead.log"].sudo().search_count([("config_id", "=", self.id)])
+        return after - before
 
     def action_test_connection(self):
         self.ensure_one()
@@ -141,24 +310,31 @@ class FacebookLeadConfig(models.Model):
                 config._record_failure(exc)
                 _logger.exception("Facebook backup sync failed for configuration %s", config.id)
 
-    def _backup_sync(self, full=False):
+    def _backup_sync(self, full=False, selected_forms=None):
         self.ensure_one()
+        selected_forms = selected_forms if selected_forms is not None else self.form_ids
         forms = {
-            line.facebook_form_id: line.facebook_form_name
-            for line in self.mapping_ids.filtered("active")
-            if line.facebook_form_id
+            form.facebook_form_id: form.name
+            for form in selected_forms.filtered("active")
+            if form.facebook_form_id
         }
-        try:
-            page_forms = self._graph_get(self.page_id + "/leadgen_forms", {"fields": "id,name", "limit": 100})
-            forms.update({str(form["id"]): form.get("name") for form in page_forms.get("data", [])})
-        except Exception:
-            if not forms:
-                raise
-            _logger.warning(
-                "Could not list forms for Facebook configuration %s; using configured form IDs.",
-                self.id,
-                exc_info=True,
-            )
+        if selected_forms is None or selected_forms == self.form_ids:
+            forms.update({
+                line.facebook_form_id: line.facebook_form_name
+                for line in self.mapping_ids.filtered("active")
+                if line.facebook_form_id
+            })
+            try:
+                page_forms = self._graph_get(self.page_id + "/leadgen_forms", {"fields": "id,name", "limit": 100})
+                forms.update({str(form["id"]): form.get("name") for form in page_forms.get("data", [])})
+            except Exception:
+                if not forms:
+                    raise
+                _logger.warning(
+                    "Could not list forms for Facebook configuration %s; using configured form IDs.",
+                    self.id,
+                    exc_info=True,
+                )
 
         imported = 0
         for form_id, form_name in forms.items():

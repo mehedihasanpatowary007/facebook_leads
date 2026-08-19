@@ -1,17 +1,20 @@
 {
     "name": "Zencore Facebook Leads",
     "summary": "Facebook Lead Ads acquisition channel for Odoo CRM",
-    "version": "19.0.2.0.0",
+    "version": "19.0.3.0.0",
     "category": "Sales/CRM",
     "license": "LGPL-3",
     "author": "Zencore Solution Limited",
     "website": "https://www.zencoresolution.com",
     "depends": ["crm", "utm", "mail"],
     "data": [
+        "security/facebook_lead_security.xml",
         "security/ir.model.access.csv",
         "data/utm_data.xml",
         "data/ir_cron_data.xml",
+        "views/facebook_lead_account_views.xml",
         "views/facebook_lead_config_views.xml",
+        "views/facebook_lead_form_views.xml",
         "views/facebook_lead_mapping_views.xml",
         "views/facebook_campaign_mapping_views.xml",
         "views/facebook_lead_log_views.xml",
@@ -20,5 +23,5 @@
     ],
     "external_dependencies": {"python": ["requests"]},
     "installable": True,
-    "application": False,
+    "application": True,
 }

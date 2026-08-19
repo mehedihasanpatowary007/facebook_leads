@@ -19,7 +19,10 @@ class FacebookLeadWebhook(http.Controller):
         config = request.env["facebook.lead.config"].sudo().search([
             ("active", "=", True), ("verify_token", "=", token)
         ], limit=1)
-        if params.get("hub.mode") == "subscribe" and config and params.get("hub.challenge"):
+        account = request.env["facebook.lead.account"].sudo().search([
+            ("active", "=", True), ("verify_token", "=", token)
+        ], limit=1)
+        if params.get("hub.mode") == "subscribe" and (config or account) and params.get("hub.challenge"):
             return request.make_response(params["hub.challenge"], headers=[("Content-Type", "text/plain")])
         return request.make_response("Forbidden", status=403)
 
@@ -67,5 +70,8 @@ class FacebookLeadWebhook(http.Controller):
         if not config.validate_signature:
             return True
         supplied = request.httprequest.headers.get("X-Hub-Signature-256", "")
-        expected = "sha256=" + hmac.new(config.app_secret.encode(), raw, hashlib.sha256).hexdigest()
+        app_secret = config.account_id.app_secret or config.app_secret
+        if not app_secret:
+            return False
+        expected = "sha256=" + hmac.new(app_secret.encode(), raw, hashlib.sha256).hexdigest()
         return bool(supplied) and hmac.compare_digest(supplied, expected)

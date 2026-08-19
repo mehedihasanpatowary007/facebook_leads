@@ -9,11 +9,12 @@ class FacebookLeadMapping(models.Model):
 
     sequence = fields.Integer(default=10)
     config_id = fields.Many2one("facebook.lead.config", required=True, ondelete="cascade")
+    form_id = fields.Many2one("facebook.lead.form", ondelete="cascade")
     facebook_form_id = fields.Char(required=True, index=True)
     facebook_form_name = fields.Char()
     facebook_field_name = fields.Char(required=True)
     odoo_field_id = fields.Many2one(
-        "ir.model.fields", required=True, ondelete="cascade",
+        "ir.model.fields", ondelete="cascade",
         domain="[('model', '=', 'crm.lead'), ('store', '=', True), ('readonly', '=', False), ('ttype', 'in', ('char', 'text', 'html', 'selection', 'integer', 'float', 'monetary', 'boolean', 'date', 'datetime', 'many2one'))]",
     )
     required = fields.Boolean()
@@ -29,5 +30,7 @@ class FacebookLeadMapping(models.Model):
         protected = {"id", "facebook_lead_id", "facebook_page_id", "facebook_form_id", "facebook_config_id"}
         for record in self:
             target = record.odoo_field_id
+            if not target:
+                continue
             if target.model != "crm.lead" or target.name in protected or target.readonly or not target.store:
                 raise ValidationError("Select a stored, writable CRM Lead field.")

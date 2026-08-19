@@ -1,6 +1,9 @@
 <odoo>
-    <menuitem id="menu_facebook_lead_config" name="Facebook Lead Integration" parent="crm.crm_menu_config" action="action_facebook_lead_config" sequence="80" groups="sales_team.group_sale_manager"/>
-    <menuitem id="menu_facebook_lead_mapping" name="Facebook Lead Field Mapping" parent="crm.crm_menu_config" action="action_facebook_lead_mapping" sequence="81" groups="sales_team.group_sale_manager"/>
-    <menuitem id="menu_facebook_campaign_mapping" name="Facebook Campaign Mapping" parent="crm.crm_menu_config" action="action_facebook_campaign_mapping" sequence="82" groups="sales_team.group_sale_manager"/>
-    <menuitem id="menu_facebook_lead_log" name="Facebook Lead Logs" parent="crm.crm_menu_config" action="action_facebook_lead_log" sequence="83" groups="sales_team.group_sale_manager"/>
+    <menuitem id="menu_facebook_lead_root" name="Facebook Leads" sequence="45" groups="sales_team.group_sale_manager"/>
+    <menuitem id="menu_facebook_lead_account" name="Facebook App Credentials" parent="menu_facebook_lead_root" action="action_facebook_lead_account" sequence="10"/>
+    <menuitem id="menu_facebook_lead_config" name="Facebook Pages" parent="menu_facebook_lead_root" action="action_facebook_lead_config" sequence="20"/>
+    <menuitem id="menu_facebook_lead_form" name="Facebook Lead Forms" parent="menu_facebook_lead_root" action="action_facebook_lead_form" sequence="30"/>
+    <menuitem id="menu_facebook_lead_mapping" name="Field Mapping" parent="menu_facebook_lead_root" action="action_facebook_lead_mapping" sequence="40"/>
+    <menuitem id="menu_facebook_campaign_mapping" name="Campaign Mapping" parent="menu_facebook_lead_root" action="action_facebook_campaign_mapping" sequence="50"/>
+    <menuitem id="menu_facebook_lead_log" name="Sync Logs" parent="menu_facebook_lead_root" action="action_facebook_lead_log" sequence="60"/>
 </odoo>

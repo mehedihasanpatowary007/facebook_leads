@@ -1,6 +1,8 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_facebook_lead_account_sale_manager,facebook.lead.account sales manager,model_facebook_lead_account,sales_team.group_sale_manager,1,1,1,1
 access_facebook_lead_config_crm_user,facebook.lead.config crm user,model_facebook_lead_config,sales_team.group_sale_salesman,1,0,0,0
 access_facebook_lead_config_sale_manager,facebook.lead.config sales manager,model_facebook_lead_config,sales_team.group_sale_manager,1,1,1,1
 access_facebook_lead_mapping_sale_manager,facebook.lead.mapping sales manager,model_facebook_lead_mapping,sales_team.group_sale_manager,1,1,1,1
 access_facebook_campaign_mapping_sale_manager,facebook.campaign.mapping sales manager,model_facebook_campaign_mapping,sales_team.group_sale_manager,1,1,1,1
 access_facebook_lead_log_sale_manager,facebook.lead.log sales manager,model_facebook_lead_log,sales_team.group_sale_manager,1,1,1,0
+access_facebook_lead_form_sale_manager,facebook.lead.form sales manager,model_facebook_lead_form,sales_team.group_sale_manager,1,1,1,1
