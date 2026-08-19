@@ -1,5 +1,6 @@
 from odoo.exceptions import ValidationError
 from odoo.tests.common import TransactionCase
+from unittest.mock import patch
 
 
 class TestFacebookLeads(TransactionCase):
@@ -75,6 +76,21 @@ class TestFacebookLeads(TransactionCase):
         page_action = self.config.action_open_forms()
         self.assertEqual(account_action["views"], [(False, "list"), (False, "form")])
         self.assertEqual(page_action["views"], [(False, "list"), (False, "form")])
+
+    def test_granular_scope_page_discovery_fallback(self):
+        account = self.env["facebook.lead.account"].create({
+            "name": "Granular Scope Test", "app_id": "246810", "app_secret": "secret",
+            "user_access_token": "user-token",
+        })
+        with patch.object(type(account), "_iter_graph_data", return_value=iter(())), patch.object(
+            type(account), "_request", side_effect=[
+                {"data": {"granular_scopes": [{"scope": "pages_show_list", "target_ids": ["93708949971"]}]}},
+                {"id": "93708949971", "name": "World University of Bangladesh", "access_token": "page-token"},
+            ]
+        ):
+            pages = account._get_authorized_pages()
+        self.assertEqual(pages[0]["id"], "93708949971")
+        self.assertEqual(pages[0]["access_token"], "page-token")
 
     def test_unmapped_form_question_is_safe(self):
         form = self.env["facebook.lead.form"].create({

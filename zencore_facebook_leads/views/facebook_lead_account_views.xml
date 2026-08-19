@@ -56,6 +56,7 @@
                         <field name="connected"/>
                         <field name="token_expires_at" readonly="1"/>
                         <field name="user_access_token" password="1" readonly="1"/>
+                        <field name="fallback_page_ids" placeholder="e.g. 93708949971" invisible="not connected"/>
                     </group>
                     <div class="alert alert-info" role="alert"><strong>Tip:</strong> Generate Token opens Facebook login. Select the Pages whose Lead Ads you want to import into Odoo.</div>
                 </sheet>

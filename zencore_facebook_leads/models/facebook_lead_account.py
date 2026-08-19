@@ -25,6 +25,11 @@ class FacebookLeadAccount(models.Model):
     api_version = fields.Char(string="Graph API Version", default="v25.0", required=True)
     verify_token = fields.Char(required=True, default=lambda self: secrets.token_urlsafe(32), groups="sales_team.group_sale_manager", copy=False)
     user_access_token = fields.Char(groups="sales_team.group_sale_manager", copy=False)
+    fallback_page_ids = fields.Char(
+        string="Fallback Facebook Page IDs",
+        groups="sales_team.group_sale_manager",
+        help="Optional comma-separated Page IDs used only when Meta returns an empty /me/accounts list.",
+    )
     token_expires_at = fields.Datetime(readonly=True, copy=False)
     oauth_redirect_uri = fields.Char(compute="_compute_oauth_redirect_uri", string="OAuth Redirect URL")
     oauth_state = fields.Char(readonly=True, copy=False, groups="sales_team.group_sale_manager")
@@ -160,7 +165,8 @@ class FacebookLeadAccount(models.Model):
         imported = 0
         subscribed = 0
         subscription_failures = 0
-        for page in self._iter_graph_data("me/accounts", {"fields": "id,name,access_token,tasks", "limit": 100}):
+        pages = self._get_authorized_pages()
+        for page in pages:
             page_id = str(page.get("id") or "")
             page_token = page.get("access_token")
             if not page_id or not page_token:
@@ -192,8 +198,13 @@ class FacebookLeadAccount(models.Model):
                 subscription_failures += 1
         return {"type": "ir.actions.client", "tag": "display_notification", "params": {
             "title": _("Facebook Pages Imported"),
-            "message": _("%(count)s Page(s) imported; %(subscribed)s webhook subscription(s) active; %(failed)s require attention.", count=imported, subscribed=subscribed, failed=subscription_failures),
-            "type": "warning" if subscription_failures else "success",
+            "message": _(
+                "%(count)s Page(s) imported; %(subscribed)s webhook subscription(s) active; %(failed)s require attention."
+                " If no Page was found, enter an authorized Page ID in Fallback Facebook Page IDs and fetch again.",
+                count=imported, subscribed=subscribed, failed=subscription_failures,
+            ),
+            "type": "warning" if subscription_failures or not imported else "success",
+            "sticky": bool(subscription_failures or not imported),
             "next": {
                 "type": "ir.actions.act_window",
                 "name": _("Facebook Pages"),
@@ -203,6 +214,58 @@ class FacebookLeadAccount(models.Model):
                 "context": {"default_account_id": self.id},
             },
         }}
+
+    def _get_authorized_pages(self):
+        """Return authorized Pages, including Meta granular-scope fallbacks.
+
+        Some Facebook Login for Business tokens expose selected Page IDs in the
+        token's granular scopes while `/me/accounts` returns an empty list.
+        """
+        self.ensure_one()
+        pages_by_id = {}
+        for page in self._iter_graph_data(
+            "me/accounts", {"fields": "id,name,access_token,tasks", "limit": 100}
+        ):
+            page_id = str(page.get("id") or "")
+            if page_id:
+                pages_by_id[page_id] = page
+
+        page_ids = set()
+        try:
+            debug = self._request(
+                "GET",
+                "debug_token",
+                {"input_token": self.user_access_token},
+                token="%s|%s" % (self.app_id, self.app_secret),
+            )
+            for scope in (debug.get("data") or {}).get("granular_scopes") or []:
+                if scope.get("scope") in {
+                    "pages_show_list",
+                    "pages_read_engagement",
+                    "pages_manage_metadata",
+                    "pages_manage_ads",
+                    "leads_retrieval",
+                }:
+                    page_ids.update(str(item) for item in scope.get("target_ids") or [] if item)
+        except UserError:
+            _logger.info("Could not inspect Meta granular scopes for Page discovery", exc_info=True)
+
+        for item in (self.fallback_page_ids or "").replace(";", ",").split(","):
+            page_id = item.strip()
+            if page_id:
+                page_ids.add(page_id)
+
+        for page_id in page_ids - set(pages_by_id):
+            try:
+                page = self._request(
+                    "GET", page_id, {"fields": "id,name,access_token"}
+                )
+            except UserError:
+                _logger.info("Meta Page %s was selected but could not be imported", page_id, exc_info=True)
+                continue
+            if page.get("id") and page.get("access_token"):
+                pages_by_id[str(page["id"])] = page
+        return list(pages_by_id.values())
 
     def action_open_pages(self):
         self.ensure_one()
