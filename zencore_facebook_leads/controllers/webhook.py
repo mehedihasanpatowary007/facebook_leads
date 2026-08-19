@@ -5,7 +5,7 @@ import logging
 
 from psycopg2 import IntegrityError
 
-from odoo import http
+from odoo import fields, http
 from odoo.http import request
 
 _logger = logging.getLogger(__name__)
@@ -40,6 +40,7 @@ class FacebookLeadWebhook(http.Controller):
                 continue
             if not self._valid_signature(config, raw):
                 return request.make_json_response({"success": False, "error": "invalid_signature"}, status=403)
+            config.sudo().write({"last_webhook_at": fields.Datetime.now()})
             for change in entry.get("changes", []):
                 if change.get("field") != "leadgen":
                     continue
@@ -57,8 +58,8 @@ class FacebookLeadWebhook(http.Controller):
                         queued += 1
                 except IntegrityError:
                     log = request.env["facebook.lead.log"].sudo().search([("facebook_lead_id", "=", lead_id)], limit=1)
-                if log and log.status in ("pending", "failed"):
-                    log._process()
+                if log and log.status == "failed":
+                    log.write({"status": "pending", "next_retry_at": False})
         return request.make_json_response({"success": True, "received": queued})
 
     @staticmethod

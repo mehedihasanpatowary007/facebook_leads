@@ -1,7 +1,9 @@
 import logging
+from datetime import timezone
 from urllib.parse import urljoin
 
 import requests
+from psycopg2 import IntegrityError
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
@@ -12,6 +14,7 @@ _logger = logging.getLogger(__name__)
 class FacebookLeadConfig(models.Model):
     _name = "facebook.lead.config"
     _description = "Facebook Lead Integration"
+    _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "company_id, name"
 
     name = fields.Char(required=True)
@@ -25,14 +28,29 @@ class FacebookLeadConfig(models.Model):
     verify_token = fields.Char(required=True, groups="sales_team.group_sale_manager", copy=False)
     api_version = fields.Char(string="Graph API Version", default="v25.0", required=True)
     validate_signature = fields.Boolean(default=True)
+    webhook_url = fields.Char(
+        string="Webhook URL",
+        default="https://wub-support-demo-34686622.dev.odoo.com/meta_lead_ads/webhook",
+        required=True,
+        help="Public HTTPS callback registered in the Meta application.",
+    )
     default_team_id = fields.Many2one("crm.team", string="Default Sales Team")
     default_user_id = fields.Many2one("res.users", string="Default Salesperson")
     default_source_id = fields.Many2one("utm.source", default=lambda self: self.env.ref("zencore_facebook_leads.utm_source_facebook", raise_if_not_found=False))
     default_medium_id = fields.Many2one("utm.medium", default=lambda self: self.env.ref("zencore_facebook_leads.utm_medium_facebook_lead_ads", raise_if_not_found=False))
     auto_sync = fields.Boolean(default=True)
+    full_sync_requested = fields.Boolean(readonly=True, copy=False)
     sync_interval = fields.Selection([("15", "15 Minutes"), ("30", "30 Minutes"), ("60", "1 Hour")], default="15", required=True)
     last_sync_at = fields.Datetime(readonly=True)
-    webhook_url = fields.Char(compute="_compute_webhook_url")
+    last_webhook_at = fields.Datetime(readonly=True)
+    last_success_at = fields.Datetime(readonly=True)
+    last_error_at = fields.Datetime(readonly=True)
+    last_error_message = fields.Text(readonly=True)
+    consecutive_failures = fields.Integer(readonly=True)
+    max_retry_count = fields.Integer(default=5, required=True)
+    retry_delay_minutes = fields.Integer(default=5, required=True)
+    processing_batch_size = fields.Integer(default=50, required=True)
+    log_retention_days = fields.Integer(default=180, required=True)
     mapping_ids = fields.One2many("facebook.lead.mapping", "config_id")
     campaign_mapping_ids = fields.One2many("facebook.campaign.mapping", "config_id")
 
@@ -46,10 +64,17 @@ class FacebookLeadConfig(models.Model):
             if record.validate_signature and not record.app_secret:
                 raise ValidationError("Meta App Secret is required when signature validation is enabled.")
 
-    @api.depends("page_id")
-    def _compute_webhook_url(self):
+    @api.constrains("webhook_url")
+    def _check_webhook_url(self):
         for record in self:
-            record.webhook_url = "https://wub-support-demo-34686622.dev.odoo.com/meta_lead_ads/webhook"
+            if not record.webhook_url.startswith("https://") or not record.webhook_url.rstrip("/").endswith("/meta_lead_ads/webhook"):
+                raise ValidationError(_("Webhook URL must use HTTPS and end with /meta_lead_ads/webhook."))
+
+    @api.constrains("max_retry_count", "retry_delay_minutes", "processing_batch_size", "log_retention_days")
+    def _check_positive_settings(self):
+        for record in self:
+            if min(record.max_retry_count, record.retry_delay_minutes, record.processing_batch_size, record.log_retention_days) <= 0:
+                raise ValidationError(_("Retry, batch, and retention settings must be greater than zero."))
 
     def _graph_get(self, object_id, params=None):
         self.ensure_one()
@@ -66,41 +91,54 @@ class FacebookLeadConfig(models.Model):
             raise UserError(_("Meta API returned an invalid response.")) from exc
         if response.status_code >= 400 or payload.get("error"):
             error = payload.get("error") or {}
-            raise UserError(_("Meta API error: %s") % (error.get("message") or response.reason))
+            raise UserError(
+                _("Meta API error [code %(code)s]: %(message)s", code=error.get("code") or response.status_code, message=error.get("message") or response.reason)
+            )
         return payload
 
     def action_test_connection(self):
         self.ensure_one()
         payload = self._graph_get(self.page_id, {"fields": "id,name"})
+        page_forms = self._graph_get(self.page_id + "/leadgen_forms", {"fields": "id,name", "limit": 100})
+        accessible_forms = {str(form.get("id")): form.get("name") for form in page_forms.get("data", [])}
+        configured_forms = set(self.mapping_ids.filtered("active").mapped("facebook_form_id"))
+        for form_id in configured_forms:
+            self._graph_get(form_id + "/leads", {"fields": "id", "limit": 1})
         return {"type": "ir.actions.client", "tag": "display_notification", "params": {
-            "title": _("Connection Successful"), "message": payload.get("name") or payload.get("id"), "type": "success"
+            "title": _("Connection and Lead Access Successful"),
+            "message": _("Page %(page)s; %(count)s accessible lead form(s).", page=payload.get("name") or payload.get("id"), count=len(accessible_forms)),
+            "type": "success",
         }}
 
     def action_sync_backlog_now(self):
         self.ensure_one()
-        imported = self._backup_sync()
-        self.last_sync_at = fields.Datetime.now()
+        self.full_sync_requested = True
+        cron = self.env.ref("zencore_facebook_leads.ir_cron_facebook_backup_sync", raise_if_not_found=False)
+        if cron:
+            cron.sudo()._trigger()
         return {"type": "ir.actions.client", "tag": "display_notification", "params": {
-            "title": _("Facebook Backlog Sync Completed"),
-            "message": _("%s new CRM lead(s) were imported.") % imported,
-            "type": "success" if imported else "warning",
-            "sticky": bool(not imported),
+            "title": _("Facebook Backlog Sync Requested"),
+            "message": _("The background worker will retrieve and queue accessible historical leads."),
+            "type": "success",
         }}
 
     @api.model
     def _cron_backup_sync(self):
         now = fields.Datetime.now()
-        for config in self.sudo().search([("active", "=", True), ("auto_sync", "=", True)]):
+        for config in self.sudo().search([
+            ("active", "=", True), "|", ("auto_sync", "=", True), ("full_sync_requested", "=", True)
+        ]):
             interval = int(config.sync_interval or 15)
-            if config.last_sync_at and (now - config.last_sync_at).total_seconds() < interval * 60:
+            if not config.full_sync_requested and config.last_sync_at and (now - config.last_sync_at).total_seconds() < interval * 60:
                 continue
             try:
-                config._backup_sync()
-                config.last_sync_at = now
-            except Exception:
+                config._backup_sync(full=config.full_sync_requested)
+                config.write({"last_sync_at": now, "full_sync_requested": False})
+            except Exception as exc:
+                config._record_failure(exc)
                 _logger.exception("Facebook backup sync failed for configuration %s", config.id)
 
-    def _backup_sync(self):
+    def _backup_sync(self, full=False):
         self.ensure_one()
         forms = {
             line.facebook_form_id: line.facebook_form_name
@@ -127,6 +165,9 @@ class FacebookLeadConfig(models.Model):
                     "fields": "id,created_time,field_data,form_id,ad_id,campaign_id,campaign_name",
                     "limit": 100,
                 }
+                if not full and self.last_sync_at:
+                    sync_datetime = fields.Datetime.to_datetime(self.last_sync_at).replace(tzinfo=timezone.utc)
+                    params["since"] = int(sync_datetime.timestamp())
                 if after:
                     params["after"] = after
                 payload = self._graph_get(str(form_id) + "/leads", params)
@@ -134,15 +175,39 @@ class FacebookLeadConfig(models.Model):
                     lead_id = str(lead_data.get("id") or "")
                     if not lead_id or self.env["facebook.lead.log"].sudo().search_count([("facebook_lead_id", "=", lead_id)]):
                         continue
-                    log = self.env["facebook.lead.log"].sudo().create({
-                        "config_id": self.id, "facebook_lead_id": lead_id,
-                        "facebook_form_id": str(form_id), "facebook_form_name": form_name,
-                        "raw_reference": lead_data, "status": "pending",
-                    })
-                    if log._process(lead_data=lead_data):
-                        imported += 1
+                    try:
+                        with self.env.cr.savepoint():
+                            self.env["facebook.lead.log"].sudo().create({
+                                "config_id": self.id, "facebook_lead_id": lead_id,
+                                "facebook_form_id": str(form_id), "facebook_form_name": form_name,
+                                "raw_reference": lead_data, "status": "pending",
+                            })
+                            imported += 1
+                    except IntegrityError:
+                        continue
                 paging = payload.get("paging") or {}
                 after = (paging.get("cursors") or {}).get("after") if paging.get("next") else False
                 if not after:
                     break
         return imported
+
+    def _record_failure(self, exc):
+        new_count = self.consecutive_failures + 1
+        self.sudo().write({
+            "last_error_at": fields.Datetime.now(), "last_error_message": str(exc)[:2000],
+            "consecutive_failures": new_count,
+        })
+        if new_count == 3:
+            user = self.default_user_id or self.env.ref("base.user_admin", raise_if_not_found=False)
+            if user:
+                self.sudo().activity_schedule(
+                    "mail.mail_activity_data_todo", user_id=user.id,
+                    summary=_("Facebook Lead Integration Requires Attention"),
+                    note=str(exc)[:2000],
+                )
+
+    def _record_success(self):
+        self.sudo().write({
+            "last_success_at": fields.Datetime.now(), "last_error_message": False,
+            "consecutive_failures": 0,
+        })

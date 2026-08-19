@@ -1,8 +1,13 @@
-import json
-from datetime import datetime, timezone
+import logging
+from datetime import datetime, timedelta, timezone
+
+from psycopg2 import IntegrityError
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+
+
+_logger = logging.getLogger(__name__)
 
 
 class FacebookLeadLog(models.Model):
@@ -15,10 +20,15 @@ class FacebookLeadLog(models.Model):
     facebook_form_id = fields.Char(index=True)
     facebook_form_name = fields.Char()
     student_name = fields.Char()
-    status = fields.Selection([("pending", "Pending"), ("success", "Success"), ("duplicate", "Duplicate"), ("failed", "Failed")], default="pending", required=True, index=True)
+    status = fields.Selection([
+        ("pending", "Pending"), ("processing", "Processing"), ("retry", "Retry"),
+        ("success", "Success"), ("duplicate", "Duplicate"), ("failed", "Failed"),
+    ], default="pending", required=True, index=True)
     crm_lead_id = fields.Many2one("crm.lead", readonly=True, ondelete="set null")
     error_message = fields.Text(readonly=True)
     retry_count = fields.Integer(readonly=True)
+    next_retry_at = fields.Datetime(readonly=True, index=True)
+    processing_started_at = fields.Datetime(readonly=True, index=True)
     raw_reference = fields.Json(copy=False)
     processed_at = fields.Datetime(readonly=True)
 
@@ -27,27 +37,93 @@ class FacebookLeadLog(models.Model):
     )
 
     def action_retry(self):
+        failed = self.env["facebook.lead.log"]
         for record in self:
-            if record.status not in ("failed", "pending"):
-                raise UserError(_("Only pending or failed leads can be retried."))
-            record.write({"status": "pending", "error_message": False, "retry_count": record.retry_count + 1})
-            record._process()
-        return True
+            if record.status not in ("failed", "pending", "retry"):
+                raise UserError(_("Only pending, retry, or failed leads can be retried."))
+            record.write({"status": "pending", "error_message": False, "next_retry_at": False})
+            if not record._process():
+                failed |= record
+        return {"type": "ir.actions.client", "tag": "display_notification", "params": {
+            "title": _("Facebook Lead Retry"),
+            "message": _("Retry finished. %s record(s) still require attention.") % len(failed),
+            "type": "warning" if failed else "success", "sticky": bool(failed),
+        }}
+
+    @api.model
+    def _cron_process_pending(self):
+        configs = self.env["facebook.lead.config"].sudo().search([("active", "=", True)])
+        for config in configs:
+            self._process_pending(config=config, limit=config.processing_batch_size)
+
+    @api.model
+    def _process_pending(self, config=None, limit=50):
+        stale_before = fields.Datetime.now() - timedelta(minutes=15)
+        stale_domain = [("status", "=", "processing"), ("processing_started_at", "<", stale_before)]
+        if config:
+            stale_domain.append(("config_id", "=", config.id))
+        self.sudo().search(stale_domain).write({"status": "retry", "next_retry_at": fields.Datetime.now()})
+        domain = [
+            ("status", "in", ("pending", "retry")),
+            "|", ("next_retry_at", "=", False), ("next_retry_at", "<=", fields.Datetime.now()),
+        ]
+        if config:
+            domain.append(("config_id", "=", config.id))
+        candidates = self.sudo().search(domain, order="create_date, id", limit=limit)
+        processed = 0
+        for candidate in candidates:
+            self.env.cr.execute("SELECT id FROM facebook_lead_log WHERE id = %s FOR UPDATE SKIP LOCKED", [candidate.id])
+            if not self.env.cr.fetchone():
+                continue
+            candidate.invalidate_recordset()
+            if candidate.status not in ("pending", "retry"):
+                continue
+            candidate._process()
+            processed += 1
+        return processed
+
+    @api.model
+    def _cron_cleanup_logs(self):
+        for config in self.env["facebook.lead.config"].sudo().search([]):
+            cutoff = fields.Datetime.now() - timedelta(days=config.log_retention_days)
+            self.sudo().search([
+                ("config_id", "=", config.id), ("status", "in", ("success", "duplicate")),
+                ("create_date", "<", cutoff),
+            ]).unlink()
 
     def _process(self, lead_data=None):
         self.ensure_one()
+        self.write({"status": "processing", "next_retry_at": False, "processing_started_at": fields.Datetime.now()})
         try:
             existing = self.env["crm.lead"].sudo().search([("facebook_lead_id", "=", self.facebook_lead_id)], limit=1)
             if existing:
-                self.write({"status": "duplicate", "crm_lead_id": existing.id, "processed_at": fields.Datetime.now(), "error_message": _("Already processed")})
+                self.write({"status": "duplicate", "crm_lead_id": existing.id, "processed_at": fields.Datetime.now(), "processing_started_at": False, "error_message": _("Already processed")})
                 return existing
             payload = lead_data or self.config_id._graph_get(self.facebook_lead_id, {"fields": "id,created_time,field_data,form_id,ad_id,campaign_id,campaign_name"})
             values = self._prepare_lead_values(payload)
-            lead = self.env["crm.lead"].sudo().with_company(self.config_id.company_id).create(values)
-            self.write({"status": "success", "crm_lead_id": lead.id, "student_name": lead.contact_name, "processed_at": fields.Datetime.now(), "error_message": False, "raw_reference": payload})
+            try:
+                with self.env.cr.savepoint():
+                    lead = self.env["crm.lead"].sudo().with_company(self.config_id.company_id).create(values)
+            except IntegrityError:
+                lead = self.env["crm.lead"].sudo().search([("facebook_lead_id", "=", self.facebook_lead_id)], limit=1)
+                if not lead:
+                    raise
+                self.write({"status": "duplicate", "crm_lead_id": lead.id, "processed_at": fields.Datetime.now(), "processing_started_at": False, "error_message": _("Already processed concurrently")})
+                return lead
+            self.write({"status": "success", "crm_lead_id": lead.id, "student_name": lead.contact_name, "processed_at": fields.Datetime.now(), "processing_started_at": False, "error_message": False, "raw_reference": payload})
+            self.config_id._record_success()
             return lead
         except Exception as exc:
-            self.write({"status": "failed", "error_message": str(exc), "processed_at": fields.Datetime.now()})
+            retry_count = self.retry_count + 1
+            final = retry_count >= self.config_id.max_retry_count
+            delay = self.config_id.retry_delay_minutes * (2 ** min(retry_count - 1, 6))
+            self.write({
+                "status": "failed" if final else "retry", "retry_count": retry_count,
+                "next_retry_at": False if final else fields.Datetime.now() + timedelta(minutes=delay),
+                "processing_started_at": False, "error_message": str(exc)[:4000], "processed_at": fields.Datetime.now(),
+            })
+            self.config_id._record_failure(exc)
+            _logger.exception("Facebook lead processing failed for %s", self.facebook_lead_id)
             return False
 
     def _prepare_lead_values(self, payload):

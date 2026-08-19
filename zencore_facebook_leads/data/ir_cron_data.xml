@@ -8,4 +8,22 @@
         <field name="interval_type">minutes</field>
         <field name="active">True</field>
     </record>
+    <record id="ir_cron_facebook_process_queue" model="ir.cron">
+        <field name="name">Facebook Leads: Process Queue</field>
+        <field name="model_id" ref="model_facebook_lead_log"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_process_pending()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+    <record id="ir_cron_facebook_cleanup_logs" model="ir.cron">
+        <field name="name">Facebook Leads: Clean Successful Logs</field>
+        <field name="model_id" ref="model_facebook_lead_log"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_cleanup_logs()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+    </record>
 </odoo>

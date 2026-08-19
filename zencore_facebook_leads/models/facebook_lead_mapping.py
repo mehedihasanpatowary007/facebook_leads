@@ -14,7 +14,7 @@ class FacebookLeadMapping(models.Model):
     facebook_field_name = fields.Char(required=True)
     odoo_field_id = fields.Many2one(
         "ir.model.fields", required=True, ondelete="cascade",
-        domain="[('model', '=', 'crm.lead'), ('store', '=', True), ('readonly', '=', False)]",
+        domain="[('model', '=', 'crm.lead'), ('store', '=', True), ('readonly', '=', False), ('ttype', 'in', ('char', 'text', 'html', 'selection', 'integer', 'float', 'monetary', 'boolean', 'date', 'datetime', 'many2one'))]",
     )
     required = fields.Boolean()
     active = fields.Boolean(default=True)
