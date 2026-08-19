@@ -1,5 +1,5 @@
 <odoo>
-    <menuitem id="menu_facebook_lead_root" name="Facebook Leads" sequence="45" groups="sales_team.group_sale_manager"/>
+    <menuitem id="menu_facebook_lead_root" name="Facebook Leads" sequence="45" groups="sales_team.group_sale_manager" web_icon="zencore_facebook_leads,static/description/icon.png"/>
     <menuitem id="menu_facebook_lead_account" name="Facebook App Credentials" parent="menu_facebook_lead_root" action="action_facebook_lead_account" sequence="10"/>
     <menuitem id="menu_facebook_lead_config" name="Facebook Pages" parent="menu_facebook_lead_root" action="action_facebook_lead_config" sequence="20"/>
     <menuitem id="menu_facebook_lead_form" name="Facebook Lead Forms" parent="menu_facebook_lead_root" action="action_facebook_lead_form" sequence="30"/>
