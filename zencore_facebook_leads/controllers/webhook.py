@@ -13,7 +13,7 @@ _logger = logging.getLogger(__name__)
 
 class FacebookLeadWebhook(http.Controller):
 
-    @http.route("/facebook/lead/webhook", type="http", auth="public", methods=["GET"], csrf=False)
+    @http.route("/meta_lead_ads/webhook", type="http", auth="public", methods=["GET"], csrf=False)
     def verify(self, **params):
         token = params.get("hub.verify_token")
         config = request.env["facebook.lead.config"].sudo().search([
@@ -23,7 +23,7 @@ class FacebookLeadWebhook(http.Controller):
             return request.make_response(params["hub.challenge"], headers=[("Content-Type", "text/plain")])
         return request.make_response("Forbidden", status=403)
 
-    @http.route("/facebook/lead/webhook", type="http", auth="public", methods=["POST"], csrf=False)
+    @http.route("/meta_lead_ads/webhook", type="http", auth="public", methods=["POST"], csrf=False)
     def receive(self, **params):
         raw = request.httprequest.get_data() or b""
         try:
