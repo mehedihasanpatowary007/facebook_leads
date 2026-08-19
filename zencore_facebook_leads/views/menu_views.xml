@@ -1,6 +1,6 @@
 <odoo>
-    <menuitem id="menu_facebook_lead_config" name="Facebook Lead Integration" parent="crm.crm_menu_config" action="action_facebook_lead_config" sequence="80" groups="zencore_facebook_leads.group_facebook_lead_manager"/>
-    <menuitem id="menu_facebook_lead_mapping" name="Facebook Lead Field Mapping" parent="crm.crm_menu_config" action="action_facebook_lead_mapping" sequence="81" groups="zencore_facebook_leads.group_facebook_lead_manager"/>
-    <menuitem id="menu_facebook_campaign_mapping" name="Facebook Campaign Mapping" parent="crm.crm_menu_config" action="action_facebook_campaign_mapping" sequence="82" groups="zencore_facebook_leads.group_facebook_lead_manager"/>
-    <menuitem id="menu_facebook_lead_log" name="Facebook Lead Logs" parent="crm.crm_menu_config" action="action_facebook_lead_log" sequence="83" groups="zencore_facebook_leads.group_facebook_lead_manager"/>
+    <menuitem id="menu_facebook_lead_config" name="Facebook Lead Integration" parent="crm.crm_menu_config" action="action_facebook_lead_config" sequence="80" groups="sales_team.group_sale_manager"/>
+    <menuitem id="menu_facebook_lead_mapping" name="Facebook Lead Field Mapping" parent="crm.crm_menu_config" action="action_facebook_lead_mapping" sequence="81" groups="sales_team.group_sale_manager"/>
+    <menuitem id="menu_facebook_campaign_mapping" name="Facebook Campaign Mapping" parent="crm.crm_menu_config" action="action_facebook_campaign_mapping" sequence="82" groups="sales_team.group_sale_manager"/>
+    <menuitem id="menu_facebook_lead_log" name="Facebook Lead Logs" parent="crm.crm_menu_config" action="action_facebook_lead_log" sequence="83" groups="sales_team.group_sale_manager"/>
 </odoo>
