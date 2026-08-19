@@ -76,6 +76,17 @@ class FacebookLeadConfig(models.Model):
             "title": _("Connection Successful"), "message": payload.get("name") or payload.get("id"), "type": "success"
         }}
 
+    def action_sync_backlog_now(self):
+        self.ensure_one()
+        imported = self._backup_sync()
+        self.last_sync_at = fields.Datetime.now()
+        return {"type": "ir.actions.client", "tag": "display_notification", "params": {
+            "title": _("Facebook Backlog Sync Completed"),
+            "message": _("%s new CRM lead(s) were imported.") % imported,
+            "type": "success" if imported else "warning",
+            "sticky": bool(not imported),
+        }}
+
     @api.model
     def _cron_backup_sync(self):
         now = fields.Datetime.now()
@@ -91,20 +102,47 @@ class FacebookLeadConfig(models.Model):
 
     def _backup_sync(self):
         self.ensure_one()
-        forms_url = self.page_id + "/leadgen_forms"
-        forms = self._graph_get(forms_url, {"fields": "id,name", "limit": 100}).get("data", [])
-        for form in forms:
-            payload = self._graph_get(form["id"] + "/leads", {
-                "fields": "id,created_time,field_data,form_id,ad_id,campaign_id,campaign_name", "limit": 100
-            })
-            for lead_data in payload.get("data", []):
-                lead_id = str(lead_data.get("id") or "")
-                if not lead_id or self.env["facebook.lead.log"].sudo().search_count([("facebook_lead_id", "=", lead_id)]):
-                    continue
-                log = self.env["facebook.lead.log"].sudo().create({
-                    "config_id": self.id, "facebook_lead_id": lead_id,
-                    "facebook_form_id": str(form["id"]), "facebook_form_name": form.get("name"),
-                    "raw_reference": lead_data, "status": "pending",
-                })
-                log._process(lead_data=lead_data)
-        return True
+        forms = {
+            line.facebook_form_id: line.facebook_form_name
+            for line in self.mapping_ids.filtered("active")
+            if line.facebook_form_id
+        }
+        try:
+            page_forms = self._graph_get(self.page_id + "/leadgen_forms", {"fields": "id,name", "limit": 100})
+            forms.update({str(form["id"]): form.get("name") for form in page_forms.get("data", [])})
+        except Exception:
+            if not forms:
+                raise
+            _logger.warning(
+                "Could not list forms for Facebook configuration %s; using configured form IDs.",
+                self.id,
+                exc_info=True,
+            )
+
+        imported = 0
+        for form_id, form_name in forms.items():
+            after = False
+            while True:
+                params = {
+                    "fields": "id,created_time,field_data,form_id,ad_id,campaign_id,campaign_name",
+                    "limit": 100,
+                }
+                if after:
+                    params["after"] = after
+                payload = self._graph_get(str(form_id) + "/leads", params)
+                for lead_data in payload.get("data", []):
+                    lead_id = str(lead_data.get("id") or "")
+                    if not lead_id or self.env["facebook.lead.log"].sudo().search_count([("facebook_lead_id", "=", lead_id)]):
+                        continue
+                    log = self.env["facebook.lead.log"].sudo().create({
+                        "config_id": self.id, "facebook_lead_id": lead_id,
+                        "facebook_form_id": str(form_id), "facebook_form_name": form_name,
+                        "raw_reference": lead_data, "status": "pending",
+                    })
+                    if log._process(lead_data=lead_data):
+                        imported += 1
+                paging = payload.get("paging") or {}
+                after = (paging.get("cursors") or {}).get("after") if paging.get("next") else False
+                if not after:
+                    break
+        return imported

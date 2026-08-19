@@ -5,7 +5,7 @@
     </record>
     <record id="view_facebook_lead_config_form" model="ir.ui.view">
         <field name="name">facebook.lead.config.form</field><field name="model">facebook.lead.config</field>
-        <field name="arch" type="xml"><form string="Facebook Lead Integration"><header><button name="action_test_connection" type="object" string="Test Connection" class="btn-primary"/></header><sheet>
+        <field name="arch" type="xml"><form string="Facebook Lead Integration"><header><button name="action_test_connection" type="object" string="Test Connection" class="btn-primary"/><button name="action_sync_backlog_now" type="object" string="Sync Backlog Now" class="btn-secondary"/></header><sheet>
             <widget name="web_ribbon" title="Archived" invisible="active"/><group><group><field name="name"/><field name="active"/><field name="company_id" groups="base.group_multi_company"/><field name="page_name"/><field name="page_id"/></group><group><field name="app_id"/><field name="api_version"/><field name="webhook_url" readonly="1"/><field name="verify_token" password="1"/></group></group>
             <notebook><page string="Credentials"><group><field name="page_access_token" password="1"/><field name="app_secret" password="1"/><field name="validate_signature"/></group></page>
             <page string="CRM Defaults"><group><field name="default_team_id"/><field name="default_user_id"/><field name="default_source_id"/><field name="default_medium_id"/></group></page>
